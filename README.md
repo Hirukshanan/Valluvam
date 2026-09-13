@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Valluvam
 
 > "Let all your thoughts be set on high aspirations"
@@ -90,3 +91,4 @@ Developed by Hirukshanan
 
 GitHub:
 https://github.com/Hirukshanan
+=======
