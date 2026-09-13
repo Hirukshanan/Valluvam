@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # Valluvam
 
 > "Let all your thoughts be set on high aspirations"
@@ -89,6 +88,4 @@ This project is developed for Valluvam nonprofit organization.
 
 Developed by Hirukshanan
 
-GitHub:
-https://github.com/Hirukshanan
-=======
+
