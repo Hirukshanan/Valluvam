@@ -1,1 +1,67 @@
 @import "tailwindcss";
+
+/*
+ * Valluvam — Global Design Tokens & Base Styles
+ *
+ * Theme: Light, warm, professional nonprofit
+ * Accent: Bronze / muted gold (#B08D57)
+ */
+
+/* ── Tailwind v4 Theme Customization ── */
+@theme {
+  --color-bronze-50: #faf6ef;
+  --color-bronze-100: #f2ead6;
+  --color-bronze-200: #e4d3ab;
+  --color-bronze-300: #d4b87a;
+  --color-bronze-400: #c7a05a;
+  --color-bronze-500: #b08d57;
+  --color-bronze-600: #977240;
+  --color-bronze-700: #7d5a35;
+  --color-bronze-800: #694a31;
+  --color-bronze-900: #5a3f2c;
+  --color-bronze-950: #332117;
+
+  --color-charcoal-50: #f6f6f6;
+  --color-charcoal-100: #e7e7e7;
+  --color-charcoal-200: #d1d1d1;
+  --color-charcoal-300: #b0b0b0;
+  --color-charcoal-400: #888888;
+  --color-charcoal-500: #6d6d6d;
+  --color-charcoal-600: #5d5d5d;
+  --color-charcoal-700: #4f4f4f;
+  --color-charcoal-800: #454545;
+  --color-charcoal-900: #3d3d3d;
+  --color-charcoal-950: #1a1a1a;
+
+  --font-sans: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+}
+
+/* ── Base Layer ── */
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    @apply bg-white text-charcoal-950 font-sans leading-relaxed;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply font-semibold tracking-tight text-charcoal-900;
+  }
+
+  a {
+    @apply text-bronze-600 hover:text-bronze-700 transition-colors duration-200;
+  }
+
+  ::selection {
+    @apply bg-bronze-200 text-charcoal-950;
+  }
+}
