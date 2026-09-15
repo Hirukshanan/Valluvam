@@ -68,7 +68,7 @@ function Home() {
         aria-labelledby="who-we-are-title"
         className="bg-white py-16 sm:py-20 lg:py-24"
       >
-        <div className="mx-auto grid max-w-7xl items-center gap-10 px-6 lg:grid-cols-2 lg:gap-16">
+        <div className="mx-auto max-w-3xl px-6">
           <div>
             <div aria-hidden="true" className="mb-6 h-1 w-14 rounded-full bg-bronze-500" />
             <h2
@@ -77,12 +77,15 @@ function Home() {
             >
               Who We Are
             </h2>
-            <p className="mt-6 max-w-xl text-base leading-8 text-charcoal-700 sm:text-lg">
-              Valluvam is a registered nonprofit organization based in Pandiruppu,
-              Kalmunai, in the Ampara District of Sri Lanka. Established on{' '}
-              <time dateTime="2025-03-28">28 March 2025</time>, we support children,
-              students, low-income families, and rural communities through
-              education and social service activities.
+            <p className="mt-6 text-base leading-8 text-charcoal-700 sm:text-lg">
+              Valluvam is a registered nonprofit organization established on{' '}
+              <time dateTime="2025-03-28">28 March 2025</time> in Pandiruppu,
+              Kalmunai. It was created with a commitment to make education and
+              community support more accessible to people who need it most.
+            </p>
+            <p className="mt-4 text-base leading-8 text-charcoal-700 sm:text-lg">
+              Our work is guided by the belief that meaningful opportunities and
+              timely support can help individuals and communities move forward.
             </p>
             <Link
               to="/about"
@@ -90,16 +93,6 @@ function Home() {
             >
               Learn More About Us
             </Link>
-          </div>
-
-          <div className="rounded-xl border border-bronze-100 bg-bronze-50 p-6 sm:p-8 lg:p-10">
-            <h3 className="text-xl font-semibold text-charcoal-950">Our purpose</h3>
-            <ul className="mt-6 list-disc space-y-4 pl-5 text-base leading-7 text-charcoal-700 marker:text-bronze-700">
-              <li>Supporting students and children</li>
-              <li>Helping low-income families</li>
-              <li>Supporting rural communities</li>
-              <li>Promoting education and community welfare</li>
-            </ul>
           </div>
         </div>
       </section>
