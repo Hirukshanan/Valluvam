@@ -1,22 +1,31 @@
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+
+import Home from './pages/Home';
+import About from './pages/About';
+import OurWork from './pages/OurWork';
+import Events from './pages/Events';
+import Gallery from './pages/Gallery';
+import Volunteer from './pages/Volunteer';
+import Support from './pages/Support';
+import Contact from './pages/Contact';
+import NotFound from './pages/NotFound';
+
 function App() {
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-      <div className="text-center p-8">
-        <h1 className="text-5xl font-bold text-gray-900 mb-4">Valluvam</h1>
-        <p className="text-lg text-gray-600 italic mb-6">
-          "Let all your thoughts be set on high aspirations"
-        </p>
-        <p className="text-sm text-gray-500">
-          Registered nonprofit organization · Pandiruppu, Kalmunai, Sri Lanka
-        </p>
-        <div className="mt-8">
-          <span className="inline-block bg-green-100 text-green-800 text-sm font-medium px-4 py-2 rounded-full">
-            🚀 Project initialized — development in progress
-          </span>
-        </div>
-      </div>
-    </div>
-  )
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/about" element={<About />} />
+        <Route path="/our-work" element={<OurWork />} />
+        <Route path="/events" element={<Events />} />
+        <Route path="/gallery" element={<Gallery />} />
+        <Route path="/volunteer" element={<Volunteer />} />
+        <Route path="/support" element={<Support />} />
+        <Route path="/contact" element={<Contact />} />
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </BrowserRouter>
+  );
 }
 
-export default App
+export default App;
