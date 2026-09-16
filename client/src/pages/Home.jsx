@@ -167,6 +167,55 @@ function Home() {
           </Link>
         </div>
       </section>
+      <section
+        aria-labelledby="get-involved-title"
+        className="bg-white py-16 sm:py-20 lg:py-24"
+      >
+        <div className="mx-auto max-w-7xl px-6">
+          <div aria-hidden="true" className="mb-6 h-1 w-14 rounded-full bg-bronze-500" />
+          <h2
+            id="get-involved-title"
+            className="text-3xl font-bold tracking-tight text-charcoal-950 sm:text-4xl"
+          >
+            Get Involved
+          </h2>
+          <p className="mt-4 text-base leading-8 text-charcoal-700 sm:text-lg">
+            Support Valluvam in practical ways by giving your time, skills, or resources.
+          </p>
+
+          <div className="mt-10 grid gap-6 md:grid-cols-2">
+            <div className="flex flex-col rounded-xl border border-bronze-100 bg-bronze-50 p-6 sm:p-8">
+              <h3 className="text-2xl font-semibold text-charcoal-950">Volunteer</h3>
+              <p className="mt-3 text-base leading-7 text-charcoal-700">
+                Contribute your time and skills to support Valluvam activities.
+              </p>
+              <div className="mt-auto pt-6">
+                <Link
+                  to="/volunteer"
+                  className="inline-flex min-h-12 w-full items-center justify-center rounded-md border border-bronze-700 bg-bronze-700 px-6 py-3 text-sm font-semibold text-white transition-colors hover:border-bronze-800 hover:bg-bronze-800 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-bronze-600 sm:w-auto"
+                >
+                  Become a Volunteer
+                </Link>
+              </div>
+            </div>
+
+            <div className="flex flex-col rounded-xl border border-bronze-100 bg-bronze-50 p-6 sm:p-8">
+              <h3 className="text-2xl font-semibold text-charcoal-950">Support Valluvam</h3>
+              <p className="mt-3 text-base leading-7 text-charcoal-700">
+                Help sustain Valluvam's educational and community initiatives with your support.
+              </p>
+              <div className="mt-auto pt-6">
+                <Link
+                  to="/support"
+                  className="inline-flex min-h-12 w-full items-center justify-center rounded-md border border-bronze-700 bg-bronze-700 px-6 py-3 text-sm font-semibold text-white transition-colors hover:border-bronze-800 hover:bg-bronze-800 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-bronze-600 sm:w-auto"
+                >
+                  Support Us
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
     </main>
   );
 }
