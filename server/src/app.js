@@ -21,8 +21,10 @@ app.get('/api/health', (req, res) => {
   });
 });
 
+// Feature routes
+app.use('/api/events', require('./routes/events'));
+
 // Future route files will be registered here:
-// app.use('/api/events',    require('./routes/events'));
 // app.use('/api/gallery',   require('./routes/gallery'));
 // app.use('/api/contact',   require('./routes/contact'));
 // app.use('/api/volunteer', require('./routes/volunteer'));
