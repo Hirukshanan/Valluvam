@@ -1,22 +1,24 @@
 /**
- * Events page — frontend-only structure.
+ * Events page — fetches and displays events from the backend API.
  *
- * Event data will be fetched from a future API endpoint and mapped
- * over the EventCard component below. The empty-state UI is shown
- * while no events are available.
+ * Endpoint: GET /api/events
+ * Response shape: { success: boolean, count: number, data: Event[] }
  *
- * When backend integration is ready:
- *   1. Fetch events from the API inside a useEffect (or a data-loader).
- *   2. Replace the empty-state block with:
- *        events.map(event => <EventCard key={event._id} {...event} />)
+ * UI states handled: loading, empty, error, success.
  */
+
+import { useEffect, useState } from 'react';
+import { fetchEvents } from '../services/eventService';
+
+// ---------------------------------------------------------------------------
+// Subcomponents
+// ---------------------------------------------------------------------------
 
 /**
  * Renders a single event card.
- * Props mirror the expected shape of a future event API response:
- *   image, title, date (ISO string), location, description, detailsUrl
+ * Props mirror the Event model: title, description, date, location, image, status.
  */
-function EventCard({ image, title, date, location, description, detailsUrl }) {
+function EventCard({ image, title, date, location, description, status }) {
   const formattedDate = date
     ? new Intl.DateTimeFormat('en-GB', {
         day: 'numeric',
@@ -25,9 +27,19 @@ function EventCard({ image, title, date, location, description, detailsUrl }) {
       }).format(new Date(date))
     : null;
 
+  /** Human-friendly label + colour for the event status. */
+  const statusConfig = {
+    upcoming: { label: 'Upcoming', className: 'bg-bronze-100 text-bronze-800' },
+    ongoing: { label: 'Ongoing', className: 'bg-emerald-100 text-emerald-800' },
+    completed: { label: 'Completed', className: 'bg-charcoal-100 text-charcoal-700' },
+    cancelled: { label: 'Cancelled', className: 'bg-red-100 text-red-800' },
+  };
+
+  const statusInfo = status ? statusConfig[status] : null;
+
   return (
     <article className="flex flex-col overflow-hidden rounded-xl border border-bronze-100 bg-white">
-      {/* Event image */}
+      {/* Event image — shown only when a valid URL exists */}
       {image ? (
         <img src={image} alt="" className="h-52 w-full object-cover" />
       ) : (
@@ -35,6 +47,15 @@ function EventCard({ image, title, date, location, description, detailsUrl }) {
       )}
 
       <div className="flex flex-1 flex-col p-6">
+        {/* Status badge */}
+        {statusInfo && (
+          <span
+            className={`mb-3 inline-flex w-fit items-center rounded-full px-3 py-0.5 text-xs font-semibold ${statusInfo.className}`}
+          >
+            {statusInfo.label}
+          </span>
+        )}
+
         {/* Date & location */}
         <dl className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-charcoal-500">
           {formattedDate && (
@@ -90,24 +111,12 @@ function EventCard({ image, title, date, location, description, detailsUrl }) {
             {description}
           </p>
         )}
-
-        {/* View Details link */}
-        {detailsUrl && (
-          <div className="mt-5">
-            <a
-              href={detailsUrl}
-              className="inline-flex min-h-10 items-center justify-center rounded-md border border-bronze-700 px-4 py-2 text-sm font-semibold text-bronze-700 transition-colors hover:bg-bronze-50 hover:text-bronze-800 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-bronze-600"
-            >
-              View Details
-            </a>
-          </div>
-        )}
       </div>
     </article>
   );
 }
 
-/** Shown when no events are available yet. */
+/** Shown when no events are available. */
 function EventsEmptyState() {
   return (
     <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-bronze-200 bg-bronze-50 px-6 py-20 text-center">
@@ -138,13 +147,131 @@ function EventsEmptyState() {
   );
 }
 
+/** Shown while events are being fetched. */
+function EventsLoadingState() {
+  return (
+    <div className="flex flex-col items-center justify-center rounded-xl border border-bronze-100 bg-bronze-50/50 px-6 py-20 text-center">
+      <div
+        aria-hidden="true"
+        className="mb-6 inline-flex h-14 w-14 items-center justify-center rounded-full bg-white text-bronze-500 shadow-sm ring-1 ring-bronze-100"
+      >
+        {/* Simple animated spinner */}
+        <svg
+          className="h-7 w-7 animate-spin"
+          viewBox="0 0 24 24"
+          fill="none"
+        >
+          <circle
+            cx="12"
+            cy="12"
+            r="10"
+            stroke="currentColor"
+            strokeWidth="3"
+            strokeLinecap="round"
+            className="opacity-25"
+          />
+          <path
+            d="M12 2a10 10 0 0 1 10 10"
+            stroke="currentColor"
+            strokeWidth="3"
+            strokeLinecap="round"
+          />
+        </svg>
+      </div>
+      <p className="text-base font-medium text-charcoal-950">
+        Loading events…
+      </p>
+    </div>
+  );
+}
+
+/** Shown when the API request fails. */
+function EventsErrorState({ onRetry }) {
+  return (
+    <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-red-200 bg-red-50 px-6 py-20 text-center">
+      <div
+        aria-hidden="true"
+        className="mb-6 inline-flex h-14 w-14 items-center justify-center rounded-full bg-white text-red-400 shadow-sm ring-1 ring-red-100"
+      >
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth={1.5}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className="h-7 w-7"
+        >
+          <circle cx="12" cy="12" r="10" />
+          <path d="M12 8v4M12 16h.01" />
+        </svg>
+      </div>
+      <p className="text-base font-medium text-charcoal-950">
+        Unable to load events
+      </p>
+      <p className="mt-2 max-w-sm text-sm leading-6 text-charcoal-500">
+        Something went wrong while fetching events. Please check your connection
+        and try again.
+      </p>
+      <button
+        type="button"
+        onClick={onRetry}
+        className="mt-6 inline-flex min-h-10 items-center justify-center rounded-md border border-bronze-700 px-5 py-2 text-sm font-semibold text-bronze-700 transition-colors hover:bg-bronze-50 hover:text-bronze-800 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-bronze-600"
+      >
+        Try Again
+      </button>
+    </div>
+  );
+}
+
 // ---------------------------------------------------------------------------
-// In a future stage, replace this empty array with data fetched from the API.
-// Example: const events = await fetch('/api/events').then(r => r.json());
+// Page component
 // ---------------------------------------------------------------------------
-const events = [];
 
 function Events() {
+  const [events, setEvents] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+
+  /** Fetches events from the API and updates component state. */
+  const loadEvents = async () => {
+    setLoading(true);
+    setError(false);
+
+    try {
+      const data = await fetchEvents();
+      setEvents(data);
+    } catch {
+      setError(true);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadEvents();
+  }, []);
+
+  /** Decide which content block to render in the listing section. */
+  const renderContent = () => {
+    if (loading) return <EventsLoadingState />;
+    if (error) return <EventsErrorState onRetry={loadEvents} />;
+    if (events.length === 0) return <EventsEmptyState />;
+
+    return (
+      <ul
+        className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3"
+        aria-label="Valluvam events"
+      >
+        {events.map((event) => (
+          <li key={event._id}>
+            <EventCard {...event} />
+          </li>
+        ))}
+      </ul>
+    );
+  };
+
   return (
     <main>
       {/* Page header */}
@@ -181,22 +308,7 @@ function Events() {
             Community, educational, and social initiatives organised by Valluvam.
           </p>
 
-          <div className="mt-10">
-            {events.length > 0 ? (
-              <ul
-                className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3"
-                aria-label="Valluvam events"
-              >
-                {events.map((event) => (
-                  <li key={event._id}>
-                    <EventCard {...event} />
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <EventsEmptyState />
-            )}
-          </div>
+          <div className="mt-10">{renderContent()}</div>
         </div>
       </section>
     </main>
