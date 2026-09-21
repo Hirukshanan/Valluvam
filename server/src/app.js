@@ -23,6 +23,7 @@ app.get('/api/health', (req, res) => {
 
 // Feature routes
 app.use('/api/events', require('./routes/events'));
+app.use('/api/auth', require('./routes/auth'));
 
 // Future route files will be registered here:
 // app.use('/api/gallery',   require('./routes/gallery'));
