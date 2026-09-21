@@ -1,5 +1,8 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 
+import { AuthProvider } from './context/AuthContext';
+import ProtectedRoute from './components/ProtectedRoute';
+
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import Home from './pages/Home';
@@ -12,9 +15,12 @@ import Support from './pages/Support';
 import Contact from './pages/Contact';
 import NotFound from './pages/NotFound';
 
-function App() {
+import AdminLogin from './pages/AdminLogin';
+import AdminDashboard from './pages/AdminDashboard';
+
+function PublicLayout() {
   return (
-    <BrowserRouter>
+    <>
       <Navbar />
       <Routes>
         <Route path="/" element={<Home />} />
@@ -28,6 +34,30 @@ function App() {
         <Route path="*" element={<NotFound />} />
       </Routes>
       <Footer />
+    </>
+  );
+}
+
+function App() {
+  return (
+    <BrowserRouter>
+      <AuthProvider>
+        <Routes>
+          {/* Admin routes — no public Navbar/Footer */}
+          <Route path="/admin/login" element={<AdminLogin />} />
+          <Route
+            path="/admin"
+            element={
+              <ProtectedRoute>
+                <AdminDashboard />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Public routes — with Navbar + Footer */}
+          <Route path="/*" element={<PublicLayout />} />
+        </Routes>
+      </AuthProvider>
     </BrowserRouter>
   );
 }
