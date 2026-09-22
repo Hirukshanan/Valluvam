@@ -25,8 +25,9 @@ app.get('/api/health', (req, res) => {
 app.use('/api/events', require('./routes/events'));
 app.use('/api/auth', require('./routes/auth'));
 
+app.use('/api/gallery', require('./routes/gallery'));
+
 // Future route files will be registered here:
-// app.use('/api/gallery',   require('./routes/gallery'));
 // app.use('/api/contact',   require('./routes/contact'));
 // app.use('/api/volunteer', require('./routes/volunteer'));
 
