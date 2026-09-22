@@ -32,10 +32,10 @@ const eventSchema = new mongoose.Schema(
     status: {
       type: String,
       enum: {
-        values: ['upcoming', 'ongoing', 'completed', 'cancelled'],
+        values: ['published', 'draft'],
         message: '{VALUE} is not a valid status',
       },
-      default: 'upcoming',
+      default: 'draft',
     },
   },
   {

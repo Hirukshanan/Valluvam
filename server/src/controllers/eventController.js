@@ -13,7 +13,7 @@ function isValidId(id) {
 // ---------------------------------------------------------------------------
 exports.getAllEvents = async (req, res) => {
   try {
-    const events = await Event.find().sort({ date: -1 });
+    const events = await Event.find({ status: 'published' }).sort({ date: -1 });
 
     res.status(200).json({
       success: true,
@@ -166,6 +166,26 @@ exports.deleteEvent = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Server error while deleting event',
+    });
+  }
+};
+
+// ---------------------------------------------------------------------------
+// GET /api/events/admin — List all events (admin only, includes drafts)
+// ---------------------------------------------------------------------------
+exports.getAllEventsAdmin = async (req, res) => {
+  try {
+    const events = await Event.find().sort({ date: -1 });
+
+    res.status(200).json({
+      success: true,
+      count: events.length,
+      data: events,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Server error while fetching events',
     });
   }
 };
