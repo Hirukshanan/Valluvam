@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 
 import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
+import AdminLayout from './components/AdminLayout';
 
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
@@ -43,16 +44,21 @@ function App() {
     <BrowserRouter>
       <AuthProvider>
         <Routes>
-          {/* Admin routes — no public Navbar/Footer */}
+          {/* Admin login — no layout chrome */}
           <Route path="/admin/login" element={<AdminLogin />} />
+
+          {/* Admin area — wrapped in layout + route protection */}
           <Route
             path="/admin"
             element={
               <ProtectedRoute>
-                <AdminDashboard />
+                <AdminLayout />
               </ProtectedRoute>
             }
-          />
+          >
+            <Route index element={<AdminDashboard />} />
+            {/* Future admin sub-pages will be nested here */}
+          </Route>
 
           {/* Public routes — with Navbar + Footer */}
           <Route path="/*" element={<PublicLayout />} />
