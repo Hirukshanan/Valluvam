@@ -15,10 +15,25 @@ import { fetchEvents } from '../services/eventService';
 // ---------------------------------------------------------------------------
 
 /**
- * Renders a single event card.
- * Props mirror the Event model: title, description, date, location, image, status.
+ * Helper to determine if an event was created within the last 7 days.
  */
-function EventCard({ image, title, date, location, description, status }) {
+function isRecentEvent(createdAt) {
+  if (!createdAt) return false;
+  const createdTime = new Date(createdAt).getTime();
+  if (Number.isNaN(createdTime)) return false;
+
+  const now = Date.now();
+  const diffInMs = now - createdTime;
+  const sevenDaysInMs = 7 * 24 * 60 * 60 * 1000;
+
+  return diffInMs >= 0 && diffInMs <= sevenDaysInMs;
+}
+
+/**
+ * Renders a single event card.
+ * Props mirror the Event model: title, description, date, location, image, createdAt.
+ */
+function EventCard({ image, title, date, location, description, createdAt }) {
   const formattedDate = date
     ? new Intl.DateTimeFormat('en-GB', {
         day: 'numeric',
@@ -27,15 +42,7 @@ function EventCard({ image, title, date, location, description, status }) {
       }).format(new Date(date))
     : null;
 
-  /** Human-friendly label + colour for the event status. */
-  const statusConfig = {
-    upcoming: { label: 'Upcoming', className: 'bg-bronze-100 text-bronze-800' },
-    ongoing: { label: 'Ongoing', className: 'bg-emerald-100 text-emerald-800' },
-    completed: { label: 'Completed', className: 'bg-charcoal-100 text-charcoal-700' },
-    cancelled: { label: 'Cancelled', className: 'bg-red-100 text-red-800' },
-  };
-
-  const statusInfo = status ? statusConfig[status] : null;
+  const isNew = isRecentEvent(createdAt);
 
   return (
     <article className="flex flex-col overflow-hidden rounded-xl border border-bronze-100 bg-white">
@@ -47,15 +54,6 @@ function EventCard({ image, title, date, location, description, status }) {
       )}
 
       <div className="flex flex-1 flex-col p-6">
-        {/* Status badge */}
-        {statusInfo && (
-          <span
-            className={`mb-3 inline-flex w-fit items-center rounded-full px-3 py-0.5 text-xs font-semibold ${statusInfo.className}`}
-          >
-            {statusInfo.label}
-          </span>
-        )}
-
         {/* Date & location */}
         <dl className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-charcoal-500">
           {formattedDate && (
@@ -101,9 +99,16 @@ function EventCard({ image, title, date, location, description, status }) {
         </dl>
 
         {/* Title */}
-        <h3 className="mt-3 text-lg font-semibold leading-snug text-charcoal-950">
-          {title}
-        </h3>
+        <div className="mt-3 flex items-start justify-between gap-3">
+          <h3 className="text-lg font-semibold leading-snug text-charcoal-950">
+            {title}
+          </h3>
+          {isNew && (
+            <span className="mt-0.5 shrink-0 inline-flex items-center rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-semibold text-emerald-800 ring-1 ring-inset ring-emerald-300">
+              NEW
+            </span>
+          )}
+        </div>
 
         {/* Description */}
         {description && (

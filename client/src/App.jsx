@@ -18,6 +18,7 @@ import NotFound from './pages/NotFound';
 
 import AdminLogin from './pages/AdminLogin';
 import AdminDashboard from './pages/AdminDashboard';
+import AdminEvents from './pages/AdminEvents';
 
 function PublicLayout() {
   return (
@@ -57,7 +58,7 @@ function App() {
             }
           >
             <Route index element={<AdminDashboard />} />
-            {/* Future admin sub-pages will be nested here */}
+            <Route path="events" element={<AdminEvents />} />
           </Route>
 
           {/* Public routes — with Navbar + Footer */}
