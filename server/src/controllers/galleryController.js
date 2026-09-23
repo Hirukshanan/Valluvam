@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const Gallery = require('../models/Gallery');
+const { uploadStream, deleteCloudinaryAsset } = require('../config/cloudinary');
 
 // ---------------------------------------------------------------------------
 // Helper — check if a string is a valid MongoDB ObjectId
@@ -7,6 +8,45 @@ const Gallery = require('../models/Gallery');
 function isValidId(id) {
   return mongoose.Types.ObjectId.isValid(id);
 }
+
+// ---------------------------------------------------------------------------
+// POST /api/gallery/upload — Upload images to Cloudinary (admin only)
+// ---------------------------------------------------------------------------
+exports.uploadImages = async (req, res) => {
+  try {
+    const files = req.files || (req.file ? [req.file] : []);
+
+    if (!files || files.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'No image files provided for upload',
+      });
+    }
+
+    // Upload all files to Cloudinary using uploadStream
+    const uploadPromises = files.map(async (file) => {
+      const result = await uploadStream(file.buffer);
+      return {
+        url: result.secure_url,
+        publicId: result.public_id,
+      };
+    });
+
+    const uploaded = await Promise.all(uploadPromises);
+
+    res.status(200).json({
+      success: true,
+      count: uploaded.length,
+      data: uploaded,
+    });
+  } catch (error) {
+    console.error('Gallery image upload error:', error);
+    res.status(500).json({
+      success: false,
+      message: error.message || 'Server error while uploading images to Cloudinary',
+    });
+  }
+};
 
 // ---------------------------------------------------------------------------
 // GET /api/gallery — List all gallery albums (public)
@@ -127,6 +167,22 @@ exports.updateAlbum = async (req, res) => {
       });
     }
 
+    // If photos are being updated, identify removed photos with publicId and clean them from Cloudinary
+    if (req.body.photos && Array.isArray(req.body.photos)) {
+      const existingAlbum = await Gallery.findById(req.params.id);
+      if (existingAlbum && existingAlbum.photos && existingAlbum.photos.length > 0) {
+        const incomingPublicIds = new Set(
+          req.body.photos.map((p) => p.publicId).filter(Boolean)
+        );
+        const removedPhotos = existingAlbum.photos.filter(
+          (p) => p.publicId && !incomingPublicIds.has(p.publicId)
+        );
+        for (const photo of removedPhotos) {
+          deleteCloudinaryAsset(photo.publicId);
+        }
+      }
+    }
+
     // Sort photos by order if provided
     if (req.body.photos && Array.isArray(req.body.photos)) {
       req.body.photos = req.body.photos.map((photo, index) => ({
@@ -190,6 +246,18 @@ exports.deleteAlbum = async (req, res) => {
       });
     }
 
+    // Clean up all Cloudinary assets associated with this album
+    if (album.photos && album.photos.length > 0) {
+      for (const photo of album.photos) {
+        if (photo.publicId) {
+          deleteCloudinaryAsset(photo.publicId);
+        }
+      }
+    }
+    if (album.coverImagePublicId) {
+      deleteCloudinaryAsset(album.coverImagePublicId);
+    }
+
     res.status(200).json({
       success: true,
       message: 'Gallery album deleted successfully',
@@ -201,4 +269,3 @@ exports.deleteAlbum = async (req, res) => {
     });
   }
 };
-
