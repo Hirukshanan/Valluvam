@@ -26,13 +26,13 @@ function GalleryItem({ src, alt, caption, date, category }) {
     : null;
 
   return (
-    <figure className="group overflow-hidden rounded-xl border border-bronze-100 bg-white">
-      <div className="overflow-hidden">
+    <figure className="group overflow-hidden rounded-xl border border-bronze-100 bg-white shadow-xs">
+      <div className="relative aspect-[4/3] w-full overflow-hidden bg-charcoal-50 flex items-center justify-center">
         <img
           src={src}
           alt={alt ?? ''}
           loading="lazy"
-          className="h-56 w-full object-cover transition-transform duration-300 group-hover:scale-105 sm:h-60"
+          className="h-full w-full object-contain transition-transform duration-300 group-hover:scale-105"
         />
       </div>
 

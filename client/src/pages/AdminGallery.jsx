@@ -236,12 +236,12 @@ function AlbumForm({ initial, onSubmit, onCancel, isSubmitting }) {
           )}
 
           {trimmedImage && !isLocalPath && !previewError && (
-            <div className="mt-2 overflow-hidden rounded-lg border border-bronze-100 bg-bronze-50/50">
+            <div className="mt-2 aspect-[4/3] max-w-xs overflow-hidden rounded-lg border border-bronze-100 bg-charcoal-50 flex items-center justify-center shadow-xs">
               <img
                 src={trimmedImage}
                 alt="Cover preview"
                 onError={() => setPreviewError(true)}
-                className="h-36 w-full rounded-lg object-cover"
+                className="h-full w-full object-contain"
               />
             </div>
           )}
@@ -355,11 +355,11 @@ function DeletePhotoDialog({ photo, onConfirm, onCancel, isDeleting }) {
           Are you sure you want to remove this photo from the album? This action cannot be undone.
         </p>
         {photo?.imageUrl && (
-          <div className="mt-3 overflow-hidden rounded-lg border border-bronze-100 bg-bronze-50/50">
+          <div className="mt-3 aspect-[4/3] w-full max-h-52 overflow-hidden rounded-lg border border-bronze-100 bg-charcoal-50 flex items-center justify-center shadow-xs">
             <img
               src={photo.imageUrl}
               alt="Photo preview"
-              className="h-28 w-full object-cover"
+              className="h-full w-full object-contain"
               onError={(e) => {
                 e.currentTarget.style.display = 'none';
               }}
@@ -411,6 +411,9 @@ function AlbumPhotosView({ album, onBack, onAlbumUpdated, setToast }) {
 
   // Cover image update state
   const [settingCoverUrl, setSettingCoverUrl] = useState(null);
+
+  // Full-size photo viewer state
+  const [viewingPhoto, setViewingPhoto] = useState(null);
 
   useEffect(() => {
     setCurrentAlbum(album);
@@ -570,14 +573,20 @@ function AlbumPhotosView({ album, onBack, onAlbumUpdated, setToast }) {
           {currentAlbum.coverImage && (
             <div className="shrink-0 flex flex-col items-start sm:items-end">
               <span className="text-xs font-medium text-charcoal-500 mb-1">Cover Image</span>
-              <img
-                src={currentAlbum.coverImage}
-                alt={currentAlbum.title}
-                className="h-20 w-28 rounded-lg object-cover border border-bronze-200 shadow-xs"
-                onError={(e) => {
-                  e.currentTarget.style.display = 'none';
-                }}
-              />
+              <div
+                className="w-28 aspect-[4/3] rounded-lg overflow-hidden border border-bronze-200 bg-charcoal-50 flex items-center justify-center shadow-xs cursor-pointer hover:border-bronze-400 transition-colors"
+                onClick={() => setViewingPhoto({ imageUrl: currentAlbum.coverImage, order: 'Cover' })}
+                title="Click to view full size"
+              >
+                <img
+                  src={currentAlbum.coverImage}
+                  alt={currentAlbum.title}
+                  className="h-full w-full object-contain"
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none';
+                  }}
+                />
+              </div>
             </div>
           )}
         </div>
@@ -608,6 +617,18 @@ function AlbumPhotosView({ album, onBack, onAlbumUpdated, setToast }) {
               <p className="mt-1 text-xs text-amber-700">
                 Local file paths (e.g. C:\...) are not supported. Please enter a direct web image URL.
               </p>
+            )}
+            {trimmedPhotoUrl && !isLocalPhotoPath && (
+              <div className="mt-3 aspect-[4/3] w-44 overflow-hidden rounded-lg border border-bronze-100 bg-charcoal-50 flex items-center justify-center shadow-xs">
+                <img
+                  src={trimmedPhotoUrl}
+                  alt="Add photo preview"
+                  className="h-full w-full object-contain"
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none';
+                  }}
+                />
+              </div>
             )}
           </div>
           <button
@@ -654,12 +675,16 @@ function AlbumPhotosView({ album, onBack, onAlbumUpdated, setToast }) {
                       : 'border-bronze-100 hover:border-bronze-200'
                   }`}
                 >
-                  {/* Photo thumbnail */}
-                  <div className="relative aspect-[4/3] w-full overflow-hidden bg-bronze-50/50">
+                  {/* Consistent 4:3 fixed aspect-ratio photo frame */}
+                  <div
+                    className="relative aspect-[4/3] w-full overflow-hidden bg-charcoal-50 flex items-center justify-center cursor-pointer"
+                    onClick={() => setViewingPhoto(photo)}
+                    title="Click to view full size"
+                  >
                     <img
                       src={photo.imageUrl}
                       alt={`Photo ${index + 1}`}
-                      className="h-full w-full object-cover transition-transform group-hover:scale-105 duration-200"
+                      className="h-full w-full object-contain transition-transform group-hover:scale-105 duration-200"
                       onError={(e) => {
                         e.currentTarget.style.display = 'none';
                       }}
@@ -667,19 +692,19 @@ function AlbumPhotosView({ album, onBack, onAlbumUpdated, setToast }) {
 
                     {/* Cover badge */}
                     {isCover && (
-                      <span className="absolute top-2 left-2 inline-flex items-center gap-1 rounded-md bg-bronze-600/95 px-2 py-0.5 text-xs font-semibold text-white shadow-sm backdrop-blur-xs">
+                      <span className="absolute top-2 left-2 inline-flex items-center gap-1 rounded-md bg-bronze-600/95 px-2 py-0.5 text-xs font-semibold text-white shadow-sm backdrop-blur-xs pointer-events-none">
                         ★ Cover Photo
                       </span>
                     )}
 
                     {/* Order tag */}
-                    <span className="absolute top-2 right-2 rounded-md bg-charcoal-900/70 px-1.5 py-0.5 text-xs font-medium text-white backdrop-blur-xs">
+                    <span className="absolute top-2 right-2 rounded-md bg-charcoal-900/70 px-1.5 py-0.5 text-xs font-medium text-white backdrop-blur-xs pointer-events-none">
                       #{photo.order !== undefined ? photo.order : index}
                     </span>
                   </div>
 
                   {/* Actions footer */}
-                  <div className="flex items-center justify-between border-t border-bronze-50 p-2.5">
+                  <div className="flex items-center justify-between border-t border-bronze-50 p-2.5 bg-white">
                     {isCover ? (
                       <span className="text-xs font-semibold text-bronze-700">
                         Current Cover
@@ -719,6 +744,44 @@ function AlbumPhotosView({ album, onBack, onAlbumUpdated, setToast }) {
           </div>
         )}
       </div>
+
+      {/* Full-size Photo Viewer Modal (preserves full original photo dimensions) */}
+      {viewingPhoto && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-charcoal-950/85 p-4 backdrop-blur-xs"
+          onClick={() => setViewingPhoto(null)}
+        >
+          <div
+            className="relative flex flex-col items-center max-w-5xl max-h-[90vh] w-full"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex w-full items-center justify-between pb-3 text-white">
+              <span className="text-sm font-medium text-charcoal-300">
+                {viewingPhoto.order !== undefined
+                  ? typeof viewingPhoto.order === 'string'
+                    ? viewingPhoto.order
+                    : `Photo #${viewingPhoto.order}`
+                  : 'Full View'}
+              </span>
+              <button
+                type="button"
+                onClick={() => setViewingPhoto(null)}
+                className="rounded-lg bg-charcoal-800/90 px-3 py-1.5 text-xs font-semibold text-white hover:bg-charcoal-700 transition-colors"
+              >
+                Close ✕
+              </button>
+            </div>
+
+            <div className="flex items-center justify-center max-h-[80vh] w-full overflow-hidden rounded-xl bg-charcoal-900/60 p-2">
+              <img
+                src={viewingPhoto.imageUrl}
+                alt="Full preview"
+                className="max-h-[78vh] max-w-full rounded-lg object-contain shadow-2xl"
+              />
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Delete Photo Dialog */}
       {deletingPhoto && (
@@ -982,14 +1045,16 @@ function AdminGallery() {
                               onClick={() => handleManagePhotos(album)}
                               className="flex items-center gap-3 text-left group"
                             >
-                              <img
-                                src={album.coverImage}
-                                alt={album.title}
-                                className="h-10 w-10 shrink-0 rounded-lg object-cover group-hover:opacity-90 transition-opacity"
-                                onError={(e) => {
-                                  e.currentTarget.style.display = 'none';
-                                }}
-                              />
+                              <div className="h-10 w-12 aspect-[4/3] shrink-0 rounded-lg overflow-hidden bg-charcoal-50 border border-bronze-100 flex items-center justify-center shadow-2xs">
+                                <img
+                                  src={album.coverImage}
+                                  alt={album.title}
+                                  className="h-full w-full object-contain group-hover:scale-105 transition-transform"
+                                  onError={(e) => {
+                                    e.currentTarget.style.display = 'none';
+                                  }}
+                                />
+                              </div>
                               <span className="font-medium text-charcoal-900 max-w-xs truncate group-hover:text-bronze-700 transition-colors">
                                 {album.title}
                               </span>
@@ -1051,15 +1116,19 @@ function AdminGallery() {
                       className="rounded-xl border border-bronze-100 bg-white p-4 shadow-sm"
                     >
                       <div className="flex items-start gap-3">
-                        <img
-                          src={album.coverImage}
-                          alt={album.title}
-                          className="h-14 w-14 shrink-0 rounded-lg object-cover cursor-pointer"
+                        <div
+                          className="w-20 aspect-[4/3] shrink-0 rounded-lg overflow-hidden bg-charcoal-50 border border-bronze-100 flex items-center justify-center cursor-pointer shadow-2xs"
                           onClick={() => handleManagePhotos(album)}
-                          onError={(e) => {
-                            e.currentTarget.style.display = 'none';
-                          }}
-                        />
+                        >
+                          <img
+                            src={album.coverImage}
+                            alt={album.title}
+                            className="h-full w-full object-contain"
+                            onError={(e) => {
+                              e.currentTarget.style.display = 'none';
+                            }}
+                          />
+                        </div>
                         <div className="min-w-0 flex-1">
                           <h3
                             onClick={() => handleManagePhotos(album)}
