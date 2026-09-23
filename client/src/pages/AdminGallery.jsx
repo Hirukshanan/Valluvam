@@ -1,5 +1,10 @@
 import { useState, useEffect } from 'react';
-import { fetchGalleryAlbums, createAlbum, fetchEvents } from '../services/adminGalleryService';
+import {
+  fetchGalleryAlbums,
+  createAlbum,
+  updateAlbum,
+  fetchEvents,
+} from '../services/adminGalleryService';
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -27,7 +32,7 @@ function formatDate(dateStr) {
 }
 
 // ---------------------------------------------------------------------------
-// Album Form (Create)
+// Album Form (Create / Edit)
 // ---------------------------------------------------------------------------
 
 const emptyForm = {
@@ -39,14 +44,33 @@ const emptyForm = {
   eventId: '',
 };
 
-function AlbumForm({ onSubmit, onCancel, isSubmitting }) {
+function AlbumForm({ initial, onSubmit, onCancel, isSubmitting }) {
   const [form, setForm] = useState(emptyForm);
   const [errors, setErrors] = useState({});
   const [previewError, setPreviewError] = useState(false);
   const [events, setEvents] = useState([]);
 
   useEffect(() => {
-    setForm(emptyForm);
+    if (initial) {
+      let eventIdVal = '';
+      if (initial.eventId) {
+        eventIdVal =
+          typeof initial.eventId === 'object' && initial.eventId._id
+            ? initial.eventId._id
+            : String(initial.eventId);
+      }
+
+      setForm({
+        title: initial.title || '',
+        description: initial.description || '',
+        category: initial.category || '',
+        date: initial.date ? String(initial.date).slice(0, 10) : '',
+        coverImage: initial.coverImage || '',
+        eventId: eventIdVal,
+      });
+    } else {
+      setForm(emptyForm);
+    }
     setErrors({});
     setPreviewError(false);
 
@@ -54,7 +78,7 @@ function AlbumForm({ onSubmit, onCancel, isSubmitting }) {
     fetchEvents()
       .then((data) => setEvents(data))
       .catch(() => setEvents([]));
-  }, []);
+  }, [initial]);
 
   function validate() {
     const e = {};
@@ -84,17 +108,15 @@ function AlbumForm({ onSubmit, onCancel, isSubmitting }) {
       return;
     }
 
-    // Build payload — only include eventId if a value was selected
+    // Build payload — set eventId to selected value or null if empty
     const payload = {
       title: form.title.trim(),
       description: form.description.trim(),
       category: form.category,
       date: form.date,
       coverImage: form.coverImage.trim(),
+      eventId: form.eventId ? form.eventId : null,
     };
-    if (form.eventId) {
-      payload.eventId = form.eventId;
-    }
 
     onSubmit(payload);
   }
@@ -261,7 +283,7 @@ function AlbumForm({ onSubmit, onCancel, isSubmitting }) {
               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
             </svg>
           )}
-          Create Album
+          {initial ? 'Update Album' : 'Create Album'}
         </button>
         <button
           type="button"
@@ -298,7 +320,7 @@ function Toast({ message, onClose }) {
 }
 
 // ---------------------------------------------------------------------------
-// Admin Gallery page — album listing + create
+// Admin Gallery page — album listing + create / edit
 // ---------------------------------------------------------------------------
 
 function AdminGallery() {
@@ -308,6 +330,7 @@ function AdminGallery() {
 
   // Form state
   const [showForm, setShowForm] = useState(false);
+  const [editingAlbum, setEditingAlbum] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Toast
@@ -330,25 +353,39 @@ function AdminGallery() {
     loadAlbums();
   }, []);
 
-  // -- Create --
+  // -- Create / Edit --
 
   function handleCreate() {
+    setEditingAlbum(null);
     setShowForm(true);
+  }
+
+  function handleEdit(album) {
+    setEditingAlbum(album);
+    setShowForm(true);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   function handleCancelForm() {
     setShowForm(false);
+    setEditingAlbum(null);
   }
 
   async function handleFormSubmit(formData) {
     setIsSubmitting(true);
     try {
-      await createAlbum(formData);
-      setToast('Album created successfully');
+      if (editingAlbum) {
+        await updateAlbum(editingAlbum._id, formData);
+        setToast('Album updated successfully');
+      } else {
+        await createAlbum(formData);
+        setToast('Album created successfully');
+      }
       setShowForm(false);
+      setEditingAlbum(null);
       await loadAlbums();
     } catch (err) {
-      setError(err.message || 'Failed to create album');
+      setError(err.message || 'Failed to save album');
     } finally {
       setIsSubmitting(false);
     }
@@ -399,9 +436,10 @@ function AdminGallery() {
       {showForm && (
         <div className="mt-6 rounded-xl border border-bronze-100 bg-white p-4 shadow-sm sm:p-6">
           <h3 className="mb-4 text-lg font-semibold text-charcoal-900">
-            Create Album
+            {editingAlbum ? 'Edit Album' : 'Create Album'}
           </h3>
           <AlbumForm
+            initial={editingAlbum}
             onSubmit={handleFormSubmit}
             onCancel={handleCancelForm}
             isSubmitting={isSubmitting}
@@ -439,6 +477,7 @@ function AdminGallery() {
                     <th className="px-4 py-3 font-semibold text-charcoal-800">Category</th>
                     <th className="px-4 py-3 font-semibold text-charcoal-800">Date</th>
                     <th className="px-4 py-3 font-semibold text-charcoal-800">Photos</th>
+                    <th className="px-4 py-3 text-right font-semibold text-charcoal-800">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-bronze-50">
@@ -469,6 +508,17 @@ function AdminGallery() {
                       </td>
                       <td className="px-4 py-3 text-charcoal-600">
                         {album.photos?.length ?? 0}
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex items-center justify-end gap-2">
+                          <button
+                            type="button"
+                            onClick={() => handleEdit(album)}
+                            className="rounded-md px-2.5 py-1.5 text-xs font-medium text-bronze-700 transition-colors hover:bg-bronze-100"
+                          >
+                            Edit
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -501,10 +551,17 @@ function AdminGallery() {
                       </p>
                     </div>
                   </div>
-                  <div className="mt-3 border-t border-bronze-50 pt-3">
+                  <div className="mt-3 flex items-center justify-between border-t border-bronze-50 pt-3">
                     <span className="inline-flex items-center rounded-full bg-bronze-100/70 px-2.5 py-0.5 text-xs font-semibold text-bronze-800">
                       {album.category}
                     </span>
+                    <button
+                      type="button"
+                      onClick={() => handleEdit(album)}
+                      className="rounded-md border border-bronze-200 px-3 py-1.5 text-xs font-medium text-bronze-700 transition-colors hover:bg-bronze-50"
+                    >
+                      Edit
+                    </button>
                   </div>
                 </div>
               ))}

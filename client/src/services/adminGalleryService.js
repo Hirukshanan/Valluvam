@@ -47,6 +47,25 @@ export async function createAlbum(albumData) {
 }
 
 /**
+ * Update an existing gallery album (admin only).
+ */
+export async function updateAlbum(id, albumData) {
+  const response = await fetch(`${API_BASE}/gallery/${id}`, {
+    method: 'PUT',
+    headers: authHeaders(),
+    body: JSON.stringify(albumData),
+  });
+
+  const json = await response.json();
+
+  if (!response.ok || !json.success) {
+    throw new Error(json.message || json.errors?.join(', ') || 'Failed to update album');
+  }
+
+  return json.data;
+}
+
+/**
  * Fetch published events for the optional event selector.
  */
 export async function fetchEvents() {
