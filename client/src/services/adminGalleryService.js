@@ -80,3 +80,21 @@ export async function fetchEvents() {
   return json.data;
 }
 
+/**
+ * Delete a gallery album (admin only).
+ */
+export async function deleteAlbum(id) {
+  const response = await fetch(`${API_BASE}/gallery/${id}`, {
+    method: 'DELETE',
+    headers: authHeaders(),
+  });
+
+  const json = await response.json();
+
+  if (!response.ok || !json.success) {
+    throw new Error(json.message || 'Failed to delete album');
+  }
+
+  return json;
+}
+

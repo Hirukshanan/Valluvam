@@ -3,6 +3,7 @@ import {
   fetchGalleryAlbums,
   createAlbum,
   updateAlbum,
+  deleteAlbum,
   fetchEvents,
 } from '../services/adminGalleryService';
 
@@ -299,6 +300,49 @@ function AlbumForm({ initial, onSubmit, onCancel, isSubmitting }) {
 }
 
 // ---------------------------------------------------------------------------
+// Delete confirmation dialog
+// ---------------------------------------------------------------------------
+
+function DeleteDialog({ albumTitle, onConfirm, onCancel, isDeleting }) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-charcoal-950/40 px-4">
+      <div className="w-full max-w-sm rounded-xl border border-bronze-100 bg-white p-6 shadow-lg">
+        <h3 className="text-lg font-semibold text-charcoal-900">Delete Album</h3>
+        <p className="mt-2 text-sm text-charcoal-600">
+          Are you sure you want to delete{' '}
+          <span className="font-medium text-charcoal-900">"{albumTitle}"</span>? This
+          action cannot be undone.
+        </p>
+        <div className="mt-6 flex items-center justify-end gap-3">
+          <button
+            type="button"
+            onClick={onCancel}
+            disabled={isDeleting}
+            className="rounded-lg border border-charcoal-200 px-4 py-2 text-sm font-medium text-charcoal-700 transition-colors hover:bg-charcoal-50 disabled:opacity-60"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            onClick={onConfirm}
+            disabled={isDeleting}
+            className="inline-flex items-center gap-2 rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-red-700 disabled:opacity-60"
+          >
+            {isDeleting && (
+              <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+              </svg>
+            )}
+            Delete
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Success toast
 // ---------------------------------------------------------------------------
 
@@ -320,7 +364,7 @@ function Toast({ message, onClose }) {
 }
 
 // ---------------------------------------------------------------------------
-// Admin Gallery page — album listing + create / edit
+// Admin Gallery page — album listing + create / edit / delete
 // ---------------------------------------------------------------------------
 
 function AdminGallery() {
@@ -332,6 +376,10 @@ function AdminGallery() {
   const [showForm, setShowForm] = useState(false);
   const [editingAlbum, setEditingAlbum] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Delete state
+  const [deletingAlbum, setDeletingAlbum] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Toast
   const [toast, setToast] = useState('');
@@ -388,6 +436,28 @@ function AdminGallery() {
       setError(err.message || 'Failed to save album');
     } finally {
       setIsSubmitting(false);
+    }
+  }
+
+  // -- Delete --
+
+  async function handleConfirmDelete() {
+    if (!deletingAlbum) return;
+    setIsDeleting(true);
+    try {
+      await deleteAlbum(deletingAlbum._id);
+      setToast('Album deleted successfully');
+      if (editingAlbum && editingAlbum._id === deletingAlbum._id) {
+        setShowForm(false);
+        setEditingAlbum(null);
+      }
+      setDeletingAlbum(null);
+      await loadAlbums();
+    } catch (err) {
+      setError(err.message || 'Failed to delete album');
+      setDeletingAlbum(null);
+    } finally {
+      setIsDeleting(false);
     }
   }
 
@@ -518,6 +588,13 @@ function AdminGallery() {
                           >
                             Edit
                           </button>
+                          <button
+                            type="button"
+                            onClick={() => setDeletingAlbum(album)}
+                            className="rounded-md px-2.5 py-1.5 text-xs font-medium text-red-600 transition-colors hover:bg-red-50"
+                          >
+                            Delete
+                          </button>
                         </div>
                       </td>
                     </tr>
@@ -555,13 +632,22 @@ function AdminGallery() {
                     <span className="inline-flex items-center rounded-full bg-bronze-100/70 px-2.5 py-0.5 text-xs font-semibold text-bronze-800">
                       {album.category}
                     </span>
-                    <button
-                      type="button"
-                      onClick={() => handleEdit(album)}
-                      className="rounded-md border border-bronze-200 px-3 py-1.5 text-xs font-medium text-bronze-700 transition-colors hover:bg-bronze-50"
-                    >
-                      Edit
-                    </button>
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => handleEdit(album)}
+                        className="rounded-md border border-bronze-200 px-3 py-1.5 text-xs font-medium text-bronze-700 transition-colors hover:bg-bronze-50"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setDeletingAlbum(album)}
+                        className="rounded-md border border-red-200 px-3 py-1.5 text-xs font-medium text-red-600 transition-colors hover:bg-red-50"
+                      >
+                        Delete
+                      </button>
+                    </div>
                   </div>
                 </div>
               ))}
@@ -569,6 +655,16 @@ function AdminGallery() {
           </>
         )}
       </div>
+
+      {/* Delete confirmation dialog */}
+      {deletingAlbum && (
+        <DeleteDialog
+          albumTitle={deletingAlbum.title}
+          onConfirm={handleConfirmDelete}
+          onCancel={() => setDeletingAlbum(null)}
+          isDeleting={isDeleting}
+        />
+      )}
 
       {/* Success toast */}
       {toast && <Toast message={toast} onClose={() => setToast('')} />}
