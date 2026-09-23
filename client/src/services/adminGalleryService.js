@@ -28,6 +28,21 @@ export async function fetchGalleryAlbums() {
 }
 
 /**
+ * Fetch a single gallery album by ID (public endpoint).
+ */
+export async function fetchGalleryAlbumById(id) {
+  const response = await fetch(`${API_BASE}/gallery/${id}`);
+
+  const json = await response.json();
+
+  if (!response.ok || !json.success) {
+    throw new Error(json.message || 'Failed to fetch gallery album');
+  }
+
+  return json.data;
+}
+
+/**
  * Create a new gallery album (admin only).
  */
 export async function createAlbum(albumData) {
