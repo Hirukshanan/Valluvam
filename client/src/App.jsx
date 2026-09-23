@@ -19,6 +19,7 @@ import NotFound from './pages/NotFound';
 import AdminLogin from './pages/AdminLogin';
 import AdminDashboard from './pages/AdminDashboard';
 import AdminEvents from './pages/AdminEvents';
+import AdminGallery from './pages/AdminGallery';
 
 function PublicLayout() {
   return (
@@ -59,6 +60,7 @@ function App() {
           >
             <Route index element={<AdminDashboard />} />
             <Route path="events" element={<AdminEvents />} />
+            <Route path="gallery" element={<AdminGallery />} />
           </Route>
 
           {/* Public routes — with Navbar + Footer */}
