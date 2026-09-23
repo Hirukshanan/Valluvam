@@ -5,6 +5,7 @@ import {
   updateAlbum,
   deleteAlbum,
   fetchEvents,
+  uploadGalleryImages,
 } from '../services/adminGalleryService';
 
 // ---------------------------------------------------------------------------
@@ -42,6 +43,7 @@ const emptyForm = {
   category: '',
   date: '',
   coverImage: '',
+  coverImagePublicId: '',
   eventId: '',
 };
 
@@ -50,6 +52,11 @@ function AlbumForm({ initial, onSubmit, onCancel, isSubmitting }) {
   const [errors, setErrors] = useState({});
   const [previewError, setPreviewError] = useState(false);
   const [events, setEvents] = useState([]);
+
+  // Cover image upload state
+  const [coverMode, setCoverMode] = useState('file'); // 'file' | 'url'
+  const [isUploadingCover, setIsUploadingCover] = useState(false);
+  const [coverUploadError, setCoverUploadError] = useState('');
 
   useEffect(() => {
     if (initial) {
@@ -67,13 +74,18 @@ function AlbumForm({ initial, onSubmit, onCancel, isSubmitting }) {
         category: initial.category || '',
         date: initial.date ? String(initial.date).slice(0, 10) : '',
         coverImage: initial.coverImage || '',
+        coverImagePublicId: initial.coverImagePublicId || '',
         eventId: eventIdVal,
       });
+      setCoverMode(initial.coverImage && !initial.coverImagePublicId ? 'url' : 'file');
     } else {
       setForm(emptyForm);
+      setCoverMode('file');
     }
     setErrors({});
     setPreviewError(false);
+    setCoverUploadError('');
+    setIsUploadingCover(false);
 
     // Load events for the optional event selector
     fetchEvents()
@@ -86,7 +98,7 @@ function AlbumForm({ initial, onSubmit, onCancel, isSubmitting }) {
     if (!form.title.trim()) e.title = 'Title is required';
     if (!form.category) e.category = 'Category is required';
     if (!form.date) e.date = 'Date is required';
-    if (!form.coverImage.trim()) e.coverImage = 'Cover image URL is required';
+    if (!form.coverImage.trim()) e.coverImage = 'Cover image is required';
     return e;
   }
 
@@ -98,6 +110,40 @@ function AlbumForm({ initial, onSubmit, onCancel, isSubmitting }) {
     }
     if (name === 'coverImage') {
       setPreviewError(false);
+    }
+  }
+
+  async function handleCoverFileChange(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type || !file.type.startsWith('image/')) {
+      setCoverUploadError('Invalid file type. Please select an image (JPEG, PNG, WebP, GIF, AVIF).');
+      return;
+    }
+
+    if (file.size > 10 * 1024 * 1024) {
+      setCoverUploadError('Image file is too large. Maximum size is 10 MB.');
+      return;
+    }
+
+    setCoverUploadError('');
+    setIsUploadingCover(true);
+    try {
+      const results = await uploadGalleryImages([file]);
+      if (results && results.length > 0) {
+        setForm((prev) => ({
+          ...prev,
+          coverImage: results[0].url,
+          coverImagePublicId: results[0].publicId,
+        }));
+        setErrors((prev) => ({ ...prev, coverImage: undefined }));
+        setPreviewError(false);
+      }
+    } catch (err) {
+      setCoverUploadError(err.message || 'Failed to upload cover image to Cloudinary');
+    } finally {
+      setIsUploadingCover(false);
     }
   }
 
@@ -116,6 +162,7 @@ function AlbumForm({ initial, onSubmit, onCancel, isSubmitting }) {
       category: form.category,
       date: form.date,
       coverImage: form.coverImage.trim(),
+      coverImagePublicId: form.coverImagePublicId || '',
       eventId: form.eventId ? form.eventId : null,
     };
 
@@ -209,40 +256,96 @@ function AlbumForm({ initial, onSubmit, onCancel, isSubmitting }) {
       {/* Cover Image URL + Event selector row */}
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
-          <label htmlFor="coverImage" className="block text-sm font-medium text-charcoal-800">
-            Cover Image URL <span className="text-red-500">*</span>
-          </label>
-          <input
-            id="coverImage"
-            name="coverImage"
-            type="url"
-            value={form.coverImage}
-            onChange={handleChange}
-            disabled={isSubmitting}
-            placeholder="https://example.com/image.jpg"
-            className={inputClass}
-          />
+          <div className="flex items-center justify-between">
+            <label className="block text-sm font-medium text-charcoal-800">
+              Cover Image <span className="text-red-500">*</span>
+            </label>
+            <div className="flex rounded-md bg-charcoal-100 p-0.5 text-xs">
+              <button
+                type="button"
+                onClick={() => setCoverMode('file')}
+                className={`rounded px-2 py-0.5 font-medium transition-colors ${
+                  coverMode === 'file'
+                    ? 'bg-white text-charcoal-900 shadow-xs'
+                    : 'text-charcoal-600 hover:text-charcoal-900'
+                }`}
+              >
+                Upload File
+              </button>
+              <button
+                type="button"
+                onClick={() => setCoverMode('url')}
+                className={`rounded px-2 py-0.5 font-medium transition-colors ${
+                  coverMode === 'url'
+                    ? 'bg-white text-charcoal-900 shadow-xs'
+                    : 'text-charcoal-600 hover:text-charcoal-900'
+                }`}
+              >
+                Paste URL
+              </button>
+            </div>
+          </div>
+
+          {coverMode === 'file' ? (
+            <div className="mt-1">
+              <input
+                id="coverFileInput"
+                type="file"
+                accept="image/*"
+                onChange={handleCoverFileChange}
+                disabled={isSubmitting || isUploadingCover}
+                className="block w-full text-xs text-charcoal-600 file:mr-2.5 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-bronze-50 file:text-bronze-700 hover:file:bg-bronze-100 file:cursor-pointer cursor-pointer rounded-lg border border-charcoal-200 bg-white p-1.5 transition-colors focus:border-bronze-400 focus:outline-none"
+              />
+              {isUploadingCover && (
+                <div className="mt-2 flex items-center space-x-2 text-xs text-bronze-700">
+                  <div className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-bronze-600 border-t-transparent" />
+                  <span>Uploading to Cloudinary...</span>
+                </div>
+              )}
+              {coverUploadError && (
+                <p className="mt-1 text-xs text-red-600">{coverUploadError}</p>
+              )}
+            </div>
+          ) : (
+            <input
+              id="coverImage"
+              name="coverImage"
+              type="url"
+              value={form.coverImage}
+              onChange={handleChange}
+              disabled={isSubmitting}
+              placeholder="https://example.com/image.jpg"
+              className={inputClass}
+            />
+          )}
 
           {trimmedImage && isLocalPath && (
             <p className="mt-2 rounded-lg border border-amber-200 bg-amber-50 p-2.5 text-xs text-amber-800">
-              Local file paths (e.g. C:\...) are not supported. Please enter a direct web image URL (http:// or https://).
+              Local file paths (e.g. C:\...) cannot be used directly in web browsers. Please switch to "Upload File" above to upload your local image to Cloudinary.
             </p>
           )}
 
           {trimmedImage && !isLocalPath && previewError && (
             <p className="mt-2 rounded-lg border border-red-200 bg-red-50 p-2.5 text-xs text-red-700">
-              Unable to load image preview. Please check that the URL is a valid, direct image link.
+              Unable to load image preview. Please check that the URL or uploaded image is valid.
             </p>
           )}
 
           {trimmedImage && !isLocalPath && !previewError && (
-            <div className="mt-2 aspect-[4/3] max-w-xs overflow-hidden rounded-lg border border-bronze-100 bg-charcoal-50 flex items-center justify-center shadow-xs">
-              <img
-                src={trimmedImage}
-                alt="Cover preview"
-                onError={() => setPreviewError(true)}
-                className="h-full w-full object-contain"
-              />
+            <div className="mt-2">
+              <div className="aspect-[4/3] max-w-xs overflow-hidden rounded-lg border border-bronze-100 bg-charcoal-50 flex items-center justify-center shadow-xs">
+                <img
+                  src={trimmedImage}
+                  alt="Cover preview"
+                  onError={() => setPreviewError(true)}
+                  className="h-full w-full object-contain"
+                />
+              </div>
+              {form.coverImagePublicId && (
+                <span className="mt-1.5 inline-flex items-center gap-1 text-[11px] font-medium text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                  ✓ Uploaded to Cloudinary
+                </span>
+              )}
             </div>
           )}
 
@@ -396,11 +499,59 @@ function DeletePhotoDialog({ photo, onConfirm, onCancel, isDeleting }) {
 }
 
 // ---------------------------------------------------------------------------
+// Staged Photo Thumbnail component
+// ---------------------------------------------------------------------------
+
+function StagedThumbnail({ file, onRemove, disabled }) {
+  const [objectUrl, setObjectUrl] = useState('');
+
+  useEffect(() => {
+    const url = URL.createObjectURL(file);
+    setObjectUrl(url);
+    return () => {
+      URL.revokeObjectURL(url);
+    };
+  }, [file]);
+
+  return (
+    <div className="group relative aspect-[4/3] rounded-md overflow-hidden border border-charcoal-200 bg-white flex items-center justify-center shadow-2xs">
+      {objectUrl && (
+        <img
+          src={objectUrl}
+          alt={file.name}
+          className="h-full w-full object-contain"
+        />
+      )}
+      <button
+        type="button"
+        onClick={onRemove}
+        disabled={disabled}
+        className="absolute top-1 right-1 h-5 w-5 rounded-full bg-charcoal-900/80 text-white flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600 disabled:opacity-0"
+        title="Remove file"
+      >
+        ✕
+      </button>
+      <div className="absolute bottom-0 inset-x-0 bg-charcoal-900/60 px-1 py-0.5 text-[9px] text-white truncate pointer-events-none text-center">
+        {file.name}
+      </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Album Photos Management View
 // ---------------------------------------------------------------------------
 
 function AlbumPhotosView({ album, onBack, onAlbumUpdated, setToast }) {
   const [currentAlbum, setCurrentAlbum] = useState(album);
+  const [photoTab, setPhotoTab] = useState('upload'); // 'upload' | 'url'
+
+  // Cloudinary batch file upload state
+  const [selectedFiles, setSelectedFiles] = useState([]);
+  const [isUploadingFiles, setIsUploadingFiles] = useState(false);
+  const [uploadError, setUploadError] = useState('');
+
+  // Single URL add state
   const [newPhotoUrl, setNewPhotoUrl] = useState('');
   const [addError, setAddError] = useState('');
   const [isAdding, setIsAdding] = useState(false);
@@ -427,7 +578,86 @@ function AlbumPhotosView({ album, onBack, onAlbumUpdated, setToast }) {
   const trimmedPhotoUrl = newPhotoUrl.trim();
   const isLocalPhotoPath = /^[a-zA-Z]:[/\\]|^file:\/\//i.test(trimmedPhotoUrl);
 
-  // Add Photo
+  // Handle local file selection for batch upload
+  function handleFilesChange(e) {
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
+
+    const invalidTypes = files.filter((f) => !f.type || !f.type.startsWith('image/'));
+    if (invalidTypes.length > 0) {
+      setUploadError('Only image files (JPEG, PNG, WebP, GIF, AVIF) are allowed.');
+      return;
+    }
+
+    const oversized = files.filter((f) => f.size > 10 * 1024 * 1024);
+    if (oversized.length > 0) {
+      setUploadError(`Some files exceed the 10 MB limit (${oversized.map((f) => f.name).join(', ')}).`);
+      return;
+    }
+
+    setUploadError('');
+    const newFiles = [...selectedFiles, ...files];
+    if (newFiles.length > 30) {
+      setUploadError('You can upload a maximum of 30 images at once.');
+      return;
+    }
+
+    setSelectedFiles(newFiles);
+    e.target.value = '';
+  }
+
+  function handleRemoveSelectedFile(indexToRemove) {
+    setSelectedFiles((prev) => prev.filter((_, idx) => idx !== indexToRemove));
+  }
+
+  function handleClearSelectedFiles() {
+    setSelectedFiles([]);
+    setUploadError('');
+  }
+
+  // Upload staged files to Cloudinary and append to current album
+  async function handleUploadFiles() {
+    if (!selectedFiles.length) return;
+
+    setIsUploadingFiles(true);
+    setUploadError('');
+
+    try {
+      const results = await uploadGalleryImages(selectedFiles);
+      if (!results || results.length === 0) {
+        throw new Error('No images were uploaded');
+      }
+
+      const currentPhotos = currentAlbum.photos || [];
+      const maxOrder = currentPhotos.reduce(
+        (max, p) => Math.max(max, p.order ?? 0),
+        -1
+      );
+
+      const newPhotos = results.map((res, idx) => ({
+        imageUrl: res.url,
+        publicId: res.publicId,
+        order: maxOrder + 1 + idx,
+      }));
+
+      const updatedPhotos = [...currentPhotos, ...newPhotos];
+
+      const updated = await updateAlbum(currentAlbum._id, {
+        photos: updatedPhotos,
+      });
+
+      setCurrentAlbum(updated);
+      onAlbumUpdated(updated);
+      setSelectedFiles([]);
+      setToast(`Successfully uploaded ${results.length} photo${results.length > 1 ? 's' : ''}`);
+    } catch (err) {
+      setUploadError(err.message || 'Failed to upload images to Cloudinary');
+    } finally {
+      setIsUploadingFiles(false);
+    }
+  }
+
+  // Add Photo by URL
   async function handleAddPhoto(e) {
     e.preventDefault();
     if (!trimmedPhotoUrl) {
@@ -494,13 +724,14 @@ function AlbumPhotosView({ album, onBack, onAlbumUpdated, setToast }) {
   }
 
   // Set Cover Image
-  async function handleSelectCover(imageUrl) {
-    if (currentAlbum.coverImage === imageUrl) return;
-    setSettingCoverUrl(imageUrl);
+  async function handleSelectCover(photo) {
+    if (currentAlbum.coverImage === photo.imageUrl) return;
+    setSettingCoverUrl(photo.imageUrl);
 
     try {
       const updated = await updateAlbum(currentAlbum._id, {
-        coverImage: imageUrl,
+        coverImage: photo.imageUrl,
+        coverImagePublicId: photo.publicId || '',
       });
 
       setCurrentAlbum(updated);
@@ -592,59 +823,171 @@ function AlbumPhotosView({ album, onBack, onAlbumUpdated, setToast }) {
         </div>
       </div>
 
-      {/* Add Photo Form */}
+      {/* Add Photo Section */}
       <div className="rounded-xl border border-bronze-100 bg-white p-5 shadow-sm">
-        <h3 className="text-base font-semibold text-charcoal-900">Add Photo</h3>
-        <p className="mt-0.5 text-xs text-charcoal-500">
-          Enter a direct web image URL to add a photo to this album.
-        </p>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-3 border-b border-charcoal-100">
+          <div>
+            <h3 className="text-base font-semibold text-charcoal-900">Add Photos</h3>
+            <p className="mt-0.5 text-xs text-charcoal-500">
+              Upload photo files directly to Cloudinary or enter an external image URL.
+            </p>
+          </div>
+          <div className="flex rounded-md bg-charcoal-100 p-0.5 text-xs shrink-0 self-start sm:self-auto">
+            <button
+              type="button"
+              onClick={() => setPhotoTab('upload')}
+              className={`rounded px-2.5 py-1 font-medium transition-colors ${
+                photoTab === 'upload'
+                  ? 'bg-white text-charcoal-900 shadow-xs'
+                  : 'text-charcoal-600 hover:text-charcoal-900'
+              }`}
+            >
+              Upload Files (Cloudinary)
+            </button>
+            <button
+              type="button"
+              onClick={() => setPhotoTab('url')}
+              className={`rounded px-2.5 py-1 font-medium transition-colors ${
+                photoTab === 'url'
+                  ? 'bg-white text-charcoal-900 shadow-xs'
+                  : 'text-charcoal-600 hover:text-charcoal-900'
+              }`}
+            >
+              Add by URL
+            </button>
+          </div>
+        </div>
 
-        <form onSubmit={handleAddPhoto} noValidate className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-start">
-          <div className="flex-1">
-            <input
-              type="url"
-              value={newPhotoUrl}
-              onChange={(e) => {
-                setNewPhotoUrl(e.target.value);
-                if (addError) setAddError('');
-              }}
-              disabled={isAdding}
-              placeholder="https://example.com/photo.jpg"
-              className="block w-full rounded-lg border border-charcoal-200 bg-white px-3 py-2 text-sm text-charcoal-950 placeholder:text-charcoal-400 transition-colors focus:border-bronze-400 focus:ring-2 focus:ring-bronze-200 focus:outline-none disabled:opacity-60"
-            />
-            {addError && <p className="mt-1 text-xs text-red-600">{addError}</p>}
-            {trimmedPhotoUrl && isLocalPhotoPath && (
-              <p className="mt-1 text-xs text-amber-700">
-                Local file paths (e.g. C:\...) are not supported. Please enter a direct web image URL.
+        {photoTab === 'upload' ? (
+          <div className="mt-4 space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+              <label
+                htmlFor="multiPhotoInput"
+                className="cursor-pointer inline-flex items-center justify-center gap-2 rounded-lg border border-dashed border-bronze-300 bg-bronze-50/50 px-4 py-2.5 text-sm font-medium text-bronze-800 hover:bg-bronze-50 hover:border-bronze-400 transition-colors"
+              >
+                <svg className="h-4 w-4 text-bronze-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
+                </svg>
+                <span>Select Images from Computer</span>
+                <input
+                  id="multiPhotoInput"
+                  type="file"
+                  multiple
+                  accept="image/*"
+                  onChange={handleFilesChange}
+                  disabled={isUploadingFiles}
+                  className="hidden"
+                />
+              </label>
+
+              <span className="text-xs text-charcoal-500">
+                Supports multiple images (JPEG, PNG, WebP, GIF, AVIF up to 10 MB each, max 30 per batch)
+              </span>
+            </div>
+
+            {uploadError && (
+              <p className="rounded-lg border border-red-200 bg-red-50 p-2.5 text-xs text-red-700">
+                {uploadError}
               </p>
             )}
-            {trimmedPhotoUrl && !isLocalPhotoPath && (
-              <div className="mt-3 aspect-[4/3] w-44 overflow-hidden rounded-lg border border-bronze-100 bg-charcoal-50 flex items-center justify-center shadow-xs">
-                <img
-                  src={trimmedPhotoUrl}
-                  alt="Add photo preview"
-                  className="h-full w-full object-contain"
-                  onError={(e) => {
-                    e.currentTarget.style.display = 'none';
-                  }}
-                />
+
+            {/* Staged files preview list */}
+            {selectedFiles.length > 0 && (
+              <div className="rounded-xl border border-charcoal-200 bg-charcoal-50/60 p-4">
+                <div className="flex items-center justify-between pb-2 mb-3 border-b border-charcoal-200">
+                  <span className="text-xs font-semibold text-charcoal-800">
+                    {selectedFiles.length} {selectedFiles.length === 1 ? 'image' : 'images'} ready to upload
+                  </span>
+                  <button
+                    type="button"
+                    onClick={handleClearSelectedFiles}
+                    disabled={isUploadingFiles}
+                    className="text-xs font-medium text-charcoal-500 hover:text-red-600 transition-colors disabled:opacity-50"
+                  >
+                    Clear selection
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 max-h-64 overflow-y-auto pr-1">
+                  {selectedFiles.map((file, idx) => (
+                    <StagedThumbnail
+                      key={`${file.name}-${file.size}-${idx}`}
+                      file={file}
+                      onRemove={() => handleRemoveSelectedFile(idx)}
+                      disabled={isUploadingFiles}
+                    />
+                  ))}
+                </div>
+
+                <div className="mt-4 flex items-center justify-end gap-3 pt-3 border-t border-charcoal-200">
+                  <button
+                    type="button"
+                    onClick={handleUploadFiles}
+                    disabled={isUploadingFiles}
+                    className="inline-flex items-center gap-2 rounded-lg bg-bronze-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-bronze-700 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {isUploadingFiles && (
+                      <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+                      </svg>
+                    )}
+                    {isUploadingFiles
+                      ? `Uploading ${selectedFiles.length} photo(s)...`
+                      : `Upload ${selectedFiles.length} Photo${selectedFiles.length > 1 ? 's' : ''} to Cloudinary`}
+                  </button>
+                </div>
               </div>
             )}
           </div>
-          <button
-            type="submit"
-            disabled={isAdding || !trimmedPhotoUrl}
-            className="inline-flex items-center justify-center gap-2 rounded-lg bg-bronze-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-bronze-700 disabled:cursor-not-allowed disabled:opacity-60 shrink-0"
-          >
-            {isAdding && (
-              <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
-              </svg>
-            )}
-            Add Photo
-          </button>
-        </form>
+        ) : (
+          <form onSubmit={handleAddPhoto} noValidate className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-start">
+            <div className="flex-1">
+              <input
+                type="url"
+                value={newPhotoUrl}
+                onChange={(e) => {
+                  setNewPhotoUrl(e.target.value);
+                  if (addError) setAddError('');
+                }}
+                disabled={isAdding}
+                placeholder="https://example.com/photo.jpg"
+                className="block w-full rounded-lg border border-charcoal-200 bg-white px-3 py-2 text-sm text-charcoal-950 placeholder:text-charcoal-400 transition-colors focus:border-bronze-400 focus:ring-2 focus:ring-bronze-200 focus:outline-none disabled:opacity-60"
+              />
+              {addError && <p className="mt-1 text-xs text-red-600">{addError}</p>}
+              {trimmedPhotoUrl && isLocalPhotoPath && (
+                <p className="mt-1 text-xs text-amber-700">
+                  Local file paths (e.g. C:\...) cannot be used directly in web browsers. Please switch to "Upload Files" above to upload local images to Cloudinary.
+                </p>
+              )}
+              {trimmedPhotoUrl && !isLocalPhotoPath && (
+                <div className="mt-3 aspect-[4/3] w-44 overflow-hidden rounded-lg border border-bronze-100 bg-charcoal-50 flex items-center justify-center shadow-xs">
+                  <img
+                    src={trimmedPhotoUrl}
+                    alt="Add photo preview"
+                    className="h-full w-full object-contain"
+                    onError={(e) => {
+                      e.currentTarget.style.display = 'none';
+                    }}
+                  />
+                </div>
+              )}
+            </div>
+            <button
+              type="submit"
+              disabled={isAdding || !trimmedPhotoUrl}
+              className="inline-flex items-center justify-center gap-2 rounded-lg bg-bronze-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-bronze-700 disabled:cursor-not-allowed disabled:opacity-60 shrink-0"
+            >
+              {isAdding && (
+                <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+                </svg>
+              )}
+              Add Photo
+            </button>
+          </form>
+        )}
       </div>
 
       {/* Photos Section */}
@@ -697,6 +1040,13 @@ function AlbumPhotosView({ album, onBack, onAlbumUpdated, setToast }) {
                       </span>
                     )}
 
+                    {/* Cloudinary indicator */}
+                    {!isCover && photo.publicId && (
+                      <span className="absolute top-2 left-2 inline-flex items-center gap-1 rounded-md bg-charcoal-900/80 px-1.5 py-0.5 text-[10px] font-medium text-white shadow-xs backdrop-blur-xs pointer-events-none">
+                        ☁ Cloud
+                      </span>
+                    )}
+
                     {/* Order tag */}
                     <span className="absolute top-2 right-2 rounded-md bg-charcoal-900/70 px-1.5 py-0.5 text-xs font-medium text-white backdrop-blur-xs pointer-events-none">
                       #{photo.order !== undefined ? photo.order : index}
@@ -712,7 +1062,7 @@ function AlbumPhotosView({ album, onBack, onAlbumUpdated, setToast }) {
                     ) : (
                       <button
                         type="button"
-                        onClick={() => handleSelectCover(photo.imageUrl)}
+                        onClick={() => handleSelectCover(photo)}
                         disabled={settingCoverUrl === photo.imageUrl}
                         className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-bronze-700 hover:bg-bronze-50 transition-colors disabled:opacity-60"
                       >

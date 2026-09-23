@@ -14,12 +14,22 @@ async function connectDB() {
     process.exit(1);
   }
 
-  try {
-    await mongoose.connect(uri);
-    console.log('Connected to MongoDB successfully.');
-  } catch (error) {
-    console.error('MongoDB connection failed:', error.message);
-    process.exit(1);
+  let retries = 5;
+  while (retries > 0) {
+    try {
+      await mongoose.connect(uri, { serverSelectionTimeoutMS: 5000 });
+      console.log('Connected to MongoDB successfully.');
+      return;
+    } catch (error) {
+      retries -= 1;
+      console.error(`MongoDB connection failed: ${error.message}. Retries left: ${retries}`);
+      if (retries === 0) {
+        console.error('Exhausted all MongoDB connection attempts. Exiting...');
+        process.exit(1);
+      }
+      // Wait 2 seconds before retrying
+      await new Promise((res) => setTimeout(res, 2000));
+    }
   }
 }
 
