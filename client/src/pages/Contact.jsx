@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { submitContactMessage } from '../services/contactService';
+import Turnstile from '../components/Turnstile';
 
 const fieldClassName =
   'mt-2 block w-full rounded-md border border-charcoal-300 bg-white px-4 py-3 text-base text-charcoal-950 transition-colors focus-visible:border-bronze-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-bronze-600 disabled:opacity-60 disabled:cursor-not-allowed';
@@ -20,6 +21,7 @@ function Contact() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
   const [serverError, setServerError] = useState('');
+  const turnstileRef = useRef(null);
 
   function validate() {
     const errs = {};
@@ -104,6 +106,25 @@ function Contact() {
     setErrors({});
     setIsSubmitting(true);
 
+    let token = '';
+    try {
+      token = await turnstileRef.current?.execute();
+    } catch (turnstileErr) {
+      setServerError(
+        turnstileErr.message || 'Security verification failed. Please try again.'
+      );
+      turnstileRef.current?.reset();
+      setIsSubmitting(false);
+      return;
+    }
+
+    if (!token) {
+      setServerError('Security verification could not be completed. Please try again.');
+      turnstileRef.current?.reset();
+      setIsSubmitting(false);
+      return;
+    }
+
     try {
       await submitContactMessage({
         name: form.name.trim(),
@@ -119,14 +140,17 @@ function Contact() {
           form.preferredContactMethod === 'phone'
             ? form.phoneNumber.trim()
             : '',
+        turnstileToken: token,
       });
 
       setSuccess(true);
       setForm(initialForm);
+      turnstileRef.current?.reset();
     } catch (err) {
       setServerError(
         err.message || 'Something went wrong while sending your message. Please try again.'
       );
+      turnstileRef.current?.reset();
     } finally {
       setIsSubmitting(false);
     }
@@ -415,6 +439,12 @@ function Contact() {
                 <p className="mt-1.5 text-xs text-red-600 font-medium">{errors.message}</p>
               )}
             </div>
+
+            {/* Cloudflare Turnstile Invisible Verification */}
+            <Turnstile
+              ref={turnstileRef}
+              siteKey={import.meta.env.VITE_TURNSTILE_SITE_KEY}
+            />
 
             <button
               type="submit"

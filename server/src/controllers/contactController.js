@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const Contact = require('../models/Contact');
+const { verifyTurnstileToken } = require('../utils/turnstile');
 
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -21,6 +22,7 @@ exports.createContact = async (req, res) => {
       preferredContactMethod = 'email',
       whatsappNumber,
       phoneNumber,
+      turnstileToken,
     } = req.body;
 
     const errors = [];
@@ -62,6 +64,33 @@ exports.createContact = async (req, res) => {
         success: false,
         message: 'Validation failed',
         errors,
+      });
+    }
+
+    // -------------------------------------------------------------------------
+    // Cloudflare Turnstile token validation
+    // -------------------------------------------------------------------------
+    const token = turnstileToken || req.body['cf-turnstile-response'];
+    if (!token || typeof token !== 'string' || !token.trim()) {
+      return res.status(400).json({
+        success: false,
+        message: 'Security verification is required. Please complete the security check.',
+        errors: ['Security verification is required'],
+      });
+    }
+
+    const clientIp =
+      req.headers['cf-connecting-ip'] ||
+      req.headers['x-forwarded-for']?.split(',')[0]?.trim() ||
+      req.socket?.remoteAddress;
+
+    const turnstileResult = await verifyTurnstileToken(token.trim(), clientIp);
+
+    if (!turnstileResult.success) {
+      return res.status(400).json({
+        success: false,
+        message: turnstileResult.message || 'Security verification failed',
+        errors: [turnstileResult.message || 'Security verification failed'],
       });
     }
 
