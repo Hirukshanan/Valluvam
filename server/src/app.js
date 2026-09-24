@@ -52,6 +52,8 @@ app.use('/api/events', require('./routes/events'));
 app.use('/api/auth', require('./routes/auth'));
 
 app.use('/api/gallery', require('./routes/gallery'));
+app.use('/api/team', require('./routes/team'));
+app.use('/api/teams', require('./routes/team'));
 
 // Future route files will be registered here:
 // app.use('/api/contact',   require('./routes/contact'));

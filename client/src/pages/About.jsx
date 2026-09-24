@@ -1,57 +1,6 @@
+import { useState, useEffect } from 'react';
 import handpic from '../assets/Handpic.jpeg';
-
-/**
- * About page — frontend-only.
- *
- * Leadership data is kept in a local array so it can later be replaced
- * by an API response without changing the render logic.
- *
- * Expected shape of each leadership record (mirrors a future API/admin schema):
- * {
- *   id:          string   — stable identifier (slug / MongoDB _id)
- *   role:        string   — e.g. "President"
- *   name:        string   — display name, or null while unpublished
- *   photo:       string   — URL, or null to show the avatar placeholder
- *   bio:         string   — short biography, or null
- *   displayOrder: number  — sort order
- *   active:      boolean  — false hides the card (reserved for future admin use)
- * }
- */
-
-// ---------------------------------------------------------------------------
-// Leadership data
-// Replace name / photo / bio fields once real information is available.
-// The admin panel will eventually manage this via a backend API.
-// ---------------------------------------------------------------------------
-const leadershipMembers = [
-  {
-    id: 'president',
-    role: 'President',
-    name: null,
-    photo: null,
-    bio: null,
-    displayOrder: 1,
-    active: true,
-  },
-  {
-    id: 'secretary',
-    role: 'Secretary',
-    name: null,
-    photo: null,
-    bio: null,
-    displayOrder: 2,
-    active: true,
-  },
-  {
-    id: 'treasurer',
-    role: 'Treasurer',
-    name: null,
-    photo: null,
-    bio: null,
-    displayOrder: 3,
-    active: true,
-  },
-];
+import { fetchActiveTeamMembers } from '../services/teamService';
 
 const values = [
   {
@@ -143,12 +92,15 @@ function AvatarPlaceholder() {
  * requires only updating the data array above.
  */
 function LeadershipCard({ role, name, photo, bio }) {
+  const hasPhoto = Boolean(photo && photo.trim());
+  const hasName = Boolean(name && name.trim());
+
   return (
     <div className="flex flex-col items-center rounded-xl border border-bronze-100 bg-white p-6 text-center sm:p-8">
-      {photo ? (
+      {hasPhoto ? (
         <img
           src={photo}
-          alt={name ?? role}
+          alt={hasName ? `${name} - ${role}` : role}
           className="mx-auto h-24 w-24 rounded-full object-cover ring-4 ring-white"
         />
       ) : (
@@ -157,12 +109,14 @@ function LeadershipCard({ role, name, photo, bio }) {
 
       <div className="mt-4">
         <p className="text-base font-semibold text-charcoal-950">
-          {name ?? (
+          {hasName ? (
+            name
+          ) : (
             <span className="italic text-charcoal-400">Name to be updated</span>
           )}
         </p>
         <p className="mt-1 text-sm font-medium text-bronze-700">{role}</p>
-        {bio && (
+        {bio && bio.trim() && (
           <p className="mt-3 text-sm leading-6 text-charcoal-700">{bio}</p>
         )}
       </div>
@@ -175,9 +129,32 @@ function LeadershipCard({ role, name, photo, bio }) {
 // ---------------------------------------------------------------------------
 
 function About() {
-  const activeMembers = leadershipMembers
+  const [teamMembers, setTeamMembers] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let isMounted = true;
+    fetchActiveTeamMembers()
+      .then((data) => {
+        if (isMounted) {
+          setTeamMembers(data || []);
+          setLoading(false);
+        }
+      })
+      .catch((err) => {
+        if (isMounted) {
+          console.error('Failed to load team members:', err);
+          setLoading(false);
+        }
+      });
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const activeMembers = (teamMembers || [])
     .filter((m) => m.active)
-    .sort((a, b) => a.displayOrder - b.displayOrder);
+    .sort((a, b) => (a.displayOrder ?? 0) - (b.displayOrder ?? 0));
 
   return (
     <main>
@@ -244,16 +221,37 @@ function About() {
             mission and the communities it serves.
           </p>
 
-          <ul
-            className="mt-10 grid gap-6 sm:grid-cols-3"
-            aria-label="Leadership team"
-          >
-            {activeMembers.map((member) => (
-              <li key={member.id}>
-                <LeadershipCard {...member} />
-              </li>
-            ))}
-          </ul>
+          {loading ? (
+            <div className="mt-10 grid gap-6 sm:grid-cols-3">
+              {[1, 2, 3].map((i) => (
+                <div
+                  key={i}
+                  className="flex flex-col items-center rounded-xl border border-bronze-100 bg-white p-6 text-center sm:p-8 animate-pulse"
+                >
+                  <div className="h-24 w-24 rounded-full bg-bronze-100 ring-4 ring-white" />
+                  <div className="mt-4 flex w-full flex-col items-center gap-2">
+                    <div className="h-4 w-32 rounded bg-charcoal-200" />
+                    <div className="h-3 w-20 rounded bg-bronze-200" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : activeMembers.length === 0 ? (
+            <p className="mt-10 text-center text-sm italic text-charcoal-500">
+              Leadership information will be updated soon.
+            </p>
+          ) : (
+            <ul
+              className="mt-10 grid gap-6 sm:grid-cols-3"
+              aria-label="Leadership team"
+            >
+              {activeMembers.map((member) => (
+                <li key={member._id || member.id}>
+                  <LeadershipCard {...member} />
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
       </section>
 
