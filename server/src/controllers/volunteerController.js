@@ -75,6 +75,23 @@ exports.createVolunteer = async (req, res) => {
       });
     }
 
+    // Duplicate volunteer submission prevention (within 2 minutes)
+    const twoMinutesAgo = new Date(Date.now() - 2 * 60 * 1000);
+    const existingDuplicate = await Volunteer.findOne({
+      email: email.trim().toLowerCase(),
+      volunteerArea: volunteerArea ? String(volunteerArea).trim() : '',
+      availability: availability ? String(availability).trim() : '',
+      message: message.trim(),
+      createdAt: { $gte: twoMinutesAgo },
+    });
+
+    if (existingDuplicate) {
+      return res.status(409).json({
+        success: false,
+        message: 'This volunteer application was already submitted recently. Please wait a moment before trying again.',
+      });
+    }
+
     const volunteer = await Volunteer.create({
       name: name.trim(),
       email: email.trim().toLowerCase(),

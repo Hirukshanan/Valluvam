@@ -8,11 +8,12 @@ const {
   deleteVolunteer,
 } = require('../controllers/volunteerController');
 const { protect, authorize } = require('../middleware/auth');
+const { volunteerRateLimiter } = require('../middleware/rateLimiter');
 
 // ---------------------------------------------------------------------------
-// Public endpoint — Website visitors submit volunteer interest
+// Public endpoint — Website visitors submit volunteer interest (rate-limited)
 // ---------------------------------------------------------------------------
-router.post('/', createVolunteer);
+router.post('/', volunteerRateLimiter, createVolunteer);
 
 // ---------------------------------------------------------------------------
 // Admin-only endpoints — JWT authentication and admin authorization required
