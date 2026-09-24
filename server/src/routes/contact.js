@@ -8,11 +8,12 @@ const {
   deleteContact,
 } = require('../controllers/contactController');
 const { protect, authorize } = require('../middleware/auth');
+const { contactRateLimiter } = require('../middleware/rateLimiter');
 
 // ---------------------------------------------------------------------------
-// Public endpoint for submitting contact messages
+// Public endpoint for submitting contact messages (rate-limited)
 // ---------------------------------------------------------------------------
-router.post('/', createContact);
+router.post('/', contactRateLimiter, createContact);
 
 // ---------------------------------------------------------------------------
 // Admin-only endpoints — JWT authentication and admin authorization required

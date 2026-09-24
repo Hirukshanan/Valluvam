@@ -11,6 +11,7 @@ import { API_BASE } from './api';
  * @param {string} [contactData.preferredContactMethod='email']
  * @param {string} [contactData.whatsappNumber]
  * @param {string} [contactData.phoneNumber]
+ * @param {string} [contactData.turnstileToken]
  * @returns {Promise<Object>} The created contact record
  */
 export async function submitContactMessage(contactData) {
