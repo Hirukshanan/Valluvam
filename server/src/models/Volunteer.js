@@ -51,7 +51,7 @@ const volunteerSchema = new mongoose.Schema(
     status: {
       type: String,
       enum: {
-        values: ['new', 'contacted', 'archived'],
+        values: ['new', 'reviewed', 'contacted', 'archived'],
         message: '{VALUE} is not a valid status',
       },
       default: 'new',

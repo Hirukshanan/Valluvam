@@ -21,6 +21,7 @@ import AdminDashboard from './pages/AdminDashboard';
 import AdminEvents from './pages/AdminEvents';
 import AdminGallery from './pages/AdminGallery';
 import AdminTeam from './pages/AdminTeam';
+import AdminVolunteers from './pages/AdminVolunteers';
 
 function PublicLayout() {
   return (
@@ -63,6 +64,7 @@ function App() {
             <Route path="events" element={<AdminEvents />} />
             <Route path="gallery" element={<AdminGallery />} />
             <Route path="team" element={<AdminTeam />} />
+            <Route path="volunteers" element={<AdminVolunteers />} />
           </Route>
 
           {/* Public routes — with Navbar + Footer */}
