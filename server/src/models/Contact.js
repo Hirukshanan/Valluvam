@@ -53,7 +53,7 @@ const contactSchema = new mongoose.Schema(
     status: {
       type: String,
       enum: {
-        values: ['new', 'read', 'archived'],
+        values: ['new', 'read', 'replied', 'archived'],
         message: '{VALUE} is not a valid status',
       },
       default: 'new',
