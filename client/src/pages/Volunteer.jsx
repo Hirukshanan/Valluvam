@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { submitVolunteer } from '../services/volunteerService';
 
 const VOLUNTEER_AREAS = [
   'Teaching & Educational Support',
@@ -34,18 +35,99 @@ const WAYS_TO_HELP = [
 ];
 
 const fieldClassName =
-  'mt-2 block w-full rounded-md border border-charcoal-300 bg-white px-4 py-3 text-base text-charcoal-950 focus-visible:border-bronze-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-bronze-600';
+  'mt-2 block w-full rounded-md border border-charcoal-300 bg-white px-4 py-3 text-base text-charcoal-950 transition-colors focus-visible:border-bronze-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-bronze-600 disabled:opacity-60 disabled:cursor-not-allowed';
 
 const selectClassName =
-  'mt-2 block w-full rounded-md border border-charcoal-300 bg-white px-4 py-3 text-base text-charcoal-950 focus-visible:border-bronze-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-bronze-600 appearance-none bg-[url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 20 20\' fill=\'%236b7280\'%3E%3Cpath fill-rule=\'evenodd\' d=\'M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06z\' clip-rule=\'evenodd\'/%3E%3C/svg%3E")] bg-[length:1.25rem_1.25rem] bg-[right_0.75rem_center] bg-no-repeat pr-10';
+  'mt-2 block w-full rounded-md border border-charcoal-300 bg-white px-4 py-3 text-base text-charcoal-950 transition-colors focus-visible:border-bronze-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-bronze-600 disabled:opacity-60 disabled:cursor-not-allowed appearance-none bg-[url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 20 20\' fill=\'%236b7280\'%3E%3Cpath fill-rule=\'evenodd\' d=\'M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06z\' clip-rule=\'evenodd\'/%3E%3C/svg%3E")] bg-[length:1.25rem_1.25rem] bg-[right_0.75rem_center] bg-no-repeat pr-10';
+
+const initialForm = {
+  name: '',
+  email: '',
+  phone: '',
+  location: '',
+  volunteerArea: '',
+  availability: '',
+  message: '',
+};
 
 function Volunteer() {
-  const [submissionAttempted, setSubmissionAttempted] = useState(false);
+  const [form, setForm] = useState(initialForm);
+  const [errors, setErrors] = useState({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [success, setSuccess] = useState(false);
+  const [serverError, setServerError] = useState('');
 
-  function handleSubmit(event) {
+  function validate() {
+    const errs = {};
+    if (!form.name.trim()) {
+      errs.name = 'Full name is required';
+    }
+    if (!form.email.trim()) {
+      errs.email = 'Email address is required';
+    } else {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(form.email.trim())) {
+        errs.email = 'Please provide a valid email address';
+      }
+    }
+    if (!form.message.trim()) {
+      errs.message = 'Short message is required';
+    }
+    return errs;
+  }
+
+  function handleChange(e) {
+    const { name, value } = e.target;
+    setForm((prev) => ({ ...prev, [name]: value }));
+    if (errors[name]) {
+      setErrors((prev) => ({ ...prev, [name]: undefined }));
+    }
+    if (serverError) {
+      setServerError('');
+    }
+    if (success) {
+      setSuccess(false);
+    }
+  }
+
+  async function handleSubmit(event) {
     event.preventDefault();
-    // Frontend-only: prevent real submission until a backend endpoint is available.
-    setSubmissionAttempted(true);
+
+    // Prevent accidental duplicate submissions
+    if (isSubmitting) return;
+
+    setServerError('');
+    setSuccess(false);
+
+    const fieldErrors = validate();
+    if (Object.keys(fieldErrors).length > 0) {
+      setErrors(fieldErrors);
+      return;
+    }
+
+    setErrors({});
+    setIsSubmitting(true);
+
+    try {
+      await submitVolunteer({
+        name: form.name.trim(),
+        email: form.email.trim(),
+        phone: form.phone.trim(),
+        location: form.location.trim(),
+        volunteerArea: form.volunteerArea.trim(),
+        availability: form.availability.trim(),
+        message: form.message.trim(),
+      });
+
+      setSuccess(true);
+      setForm(initialForm);
+    } catch (err) {
+      setServerError(
+        err.message || 'Something went wrong while submitting your application. Please try again.'
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   return (
@@ -112,6 +194,68 @@ function Volunteer() {
               <span className="sr-only">an asterisk</span> are required.
             </p>
 
+            {/* Success message banner */}
+            {success && (
+              <div
+                role="status"
+                className="mt-6 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-emerald-800"
+              >
+                <div className="flex items-start gap-3">
+                  <svg
+                    className="h-5 w-5 shrink-0 text-emerald-600 mt-0.5"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                    aria-hidden="true"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                  <div>
+                    <p className="text-sm font-semibold">Thank you for your interest in volunteering!</p>
+                    <p className="mt-1 text-sm text-emerald-700">
+                      Your details have been submitted successfully. Our team will review your application and get in touch with you soon.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Error message banner */}
+            {serverError && (
+              <div
+                role="alert"
+                className="mt-6 rounded-xl border border-red-200 bg-red-50 p-4 text-red-800"
+              >
+                <div className="flex items-start gap-3">
+                  <svg
+                    className="h-5 w-5 shrink-0 text-red-600 mt-0.5"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                    aria-hidden="true"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 7.22z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium">{serverError}</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setServerError('')}
+                    className="ml-auto text-xs font-semibold text-red-700 hover:underline"
+                  >
+                    Dismiss
+                  </button>
+                </div>
+              </div>
+            )}
+
             <form
               onSubmit={handleSubmit}
               aria-labelledby="volunteer-form-title"
@@ -129,12 +273,20 @@ function Volunteer() {
                 </label>
                 <input
                   id="vol-name"
-                  name="fullName"
+                  name="name"
                   type="text"
                   autoComplete="name"
                   required
-                  className={fieldClassName}
+                  value={form.name}
+                  onChange={handleChange}
+                  disabled={isSubmitting}
+                  className={`${fieldClassName} ${
+                    errors.name ? 'border-red-500 focus-visible:border-red-500 focus-visible:outline-red-600' : ''
+                  }`}
                 />
+                {errors.name && (
+                  <p className="mt-1 text-xs text-red-600">{errors.name}</p>
+                )}
               </div>
 
               {/* Email Address */}
@@ -151,8 +303,16 @@ function Volunteer() {
                   type="email"
                   autoComplete="email"
                   required
-                  className={fieldClassName}
+                  value={form.email}
+                  onChange={handleChange}
+                  disabled={isSubmitting}
+                  className={`${fieldClassName} ${
+                    errors.email ? 'border-red-500 focus-visible:border-red-500 focus-visible:outline-red-600' : ''
+                  }`}
                 />
+                {errors.email && (
+                  <p className="mt-1 text-xs text-red-600">{errors.email}</p>
+                )}
               </div>
 
               {/* Phone Number */}
@@ -168,6 +328,9 @@ function Volunteer() {
                   name="phone"
                   type="tel"
                   autoComplete="tel"
+                  value={form.phone}
+                  onChange={handleChange}
+                  disabled={isSubmitting}
                   className={fieldClassName}
                 />
               </div>
@@ -185,6 +348,9 @@ function Volunteer() {
                   name="location"
                   type="text"
                   autoComplete="address-level2"
+                  value={form.location}
+                  onChange={handleChange}
+                  disabled={isSubmitting}
                   className={fieldClassName}
                 />
               </div>
@@ -195,16 +361,17 @@ function Volunteer() {
                   htmlFor="vol-area"
                   className="block text-sm font-semibold text-charcoal-950"
                 >
-                  Preferred Area of Volunteering <span aria-hidden="true">*</span>
+                  Preferred Area of Volunteering
                 </label>
                 <select
                   id="vol-area"
-                  name="volunteeringArea"
-                  required
-                  defaultValue=""
+                  name="volunteerArea"
+                  value={form.volunteerArea}
+                  onChange={handleChange}
+                  disabled={isSubmitting}
                   className={selectClassName}
                 >
-                  <option value="" disabled>
+                  <option value="">
                     Select an area…
                   </option>
                   {VOLUNTEER_AREAS.map((area) => (
@@ -221,16 +388,17 @@ function Volunteer() {
                   htmlFor="vol-availability"
                   className="block text-sm font-semibold text-charcoal-950"
                 >
-                  Availability <span aria-hidden="true">*</span>
+                  Availability
                 </label>
                 <select
                   id="vol-availability"
                   name="availability"
-                  required
-                  defaultValue=""
+                  value={form.availability}
+                  onChange={handleChange}
+                  disabled={isSubmitting}
                   className={selectClassName}
                 >
-                  <option value="" disabled>
+                  <option value="">
                     Select availability…
                   </option>
                   {AVAILABILITY_OPTIONS.map((opt) => (
@@ -247,7 +415,7 @@ function Volunteer() {
                   htmlFor="vol-message"
                   className="block text-sm font-semibold text-charcoal-950"
                 >
-                  Short Message
+                  Short Message <span aria-hidden="true">*</span>
                 </label>
                 <p id="vol-message-hint" className="mt-1 text-xs text-charcoal-500">
                   Tell us a little about yourself and why you'd like to volunteer with Valluvam.
@@ -256,26 +424,38 @@ function Volunteer() {
                   id="vol-message"
                   name="message"
                   rows={4}
+                  required
+                  value={form.message}
+                  onChange={handleChange}
+                  disabled={isSubmitting}
                   aria-describedby="vol-message-hint"
-                  className={`${fieldClassName} resize-y`}
+                  className={`${fieldClassName} resize-y ${
+                    errors.message ? 'border-red-500 focus-visible:border-red-500 focus-visible:outline-red-600' : ''
+                  }`}
                 />
+                {errors.message && (
+                  <p className="mt-1 text-xs text-red-600">{errors.message}</p>
+                )}
               </div>
 
               {/* Submit */}
-              {/* TODO: Integrate Cloudflare Turnstile or similar CAPTCHA here before
-                  connecting to a backend endpoint. */}
               <button
                 type="submit"
-                className="inline-flex min-h-12 w-full items-center justify-center rounded-md border border-bronze-700 bg-bronze-700 px-6 py-3 text-sm font-semibold text-white transition-colors hover:border-bronze-800 hover:bg-bronze-800 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-bronze-600 sm:w-auto"
+                disabled={isSubmitting}
+                className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-md border border-bronze-700 bg-bronze-700 px-6 py-3 text-sm font-semibold text-white transition-colors hover:border-bronze-800 hover:bg-bronze-800 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-bronze-600 disabled:opacity-60 disabled:cursor-not-allowed sm:w-auto"
               >
-                Submit Volunteer Interest
+                {isSubmitting ? (
+                  <>
+                    <svg className="h-4 w-4 animate-spin text-white" viewBox="0 0 24 24" fill="none">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+                    </svg>
+                    Submitting…
+                  </>
+                ) : (
+                  'Submit Volunteer Interest'
+                )}
               </button>
-
-              {/* Submission status — shown after submit attempt */}
-              <p role="status" className="text-sm leading-6 text-charcoal-700">
-                {submissionAttempted &&
-                  'Thank you for your interest! Online submission is not yet available — please email us directly at valluvamofficial@gmail.com.'}
-              </p>
             </form>
           </section>
 

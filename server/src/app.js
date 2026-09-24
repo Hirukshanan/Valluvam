@@ -55,9 +55,11 @@ app.use('/api/gallery', require('./routes/gallery'));
 app.use('/api/team', require('./routes/team'));
 app.use('/api/teams', require('./routes/team'));
 
+app.use('/api/volunteers', require('./routes/volunteers'));
+app.use('/api/volunteer', require('./routes/volunteers'));
+
 // Future route files will be registered here:
 // app.use('/api/contact',   require('./routes/contact'));
-// app.use('/api/volunteer', require('./routes/volunteer'));
 
 // ---------------------------------------------------------------------------
 // Central Error Handler — guarantees all errors return JSON with CORS headers
