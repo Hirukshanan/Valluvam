@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const Volunteer = require('../models/Volunteer');
+const { verifyTurnstileToken } = require('../utils/turnstile');
 
 // Helper to check valid MongoDB ObjectId
 function isValidId(id) {
@@ -19,6 +20,7 @@ exports.createVolunteer = async (req, res) => {
       volunteerArea,
       availability,
       message,
+      turnstileToken,
     } = req.body;
 
     // Field validations
@@ -43,6 +45,50 @@ exports.createVolunteer = async (req, res) => {
         success: false,
         message: 'Validation failed',
         errors,
+      });
+    }
+
+    // -------------------------------------------------------------------------
+    // Cloudflare Turnstile token validation
+    // -------------------------------------------------------------------------
+    const token = turnstileToken || req.body['cf-turnstile-response'];
+    if (!token || typeof token !== 'string' || !token.trim()) {
+      return res.status(400).json({
+        success: false,
+        message: 'Security verification is required. Please complete the security check.',
+        errors: ['Security verification is required'],
+      });
+    }
+
+    const clientIp =
+      req.headers['cf-connecting-ip'] ||
+      req.headers['x-forwarded-for']?.split(',')[0]?.trim() ||
+      req.socket?.remoteAddress;
+
+    const turnstileResult = await verifyTurnstileToken(token.trim(), clientIp);
+
+    if (!turnstileResult.success) {
+      return res.status(400).json({
+        success: false,
+        message: turnstileResult.message || 'Security verification failed',
+        errors: [turnstileResult.message || 'Security verification failed'],
+      });
+    }
+
+    // Duplicate volunteer submission prevention (within 2 minutes)
+    const twoMinutesAgo = new Date(Date.now() - 2 * 60 * 1000);
+    const existingDuplicate = await Volunteer.findOne({
+      email: email.trim().toLowerCase(),
+      volunteerArea: volunteerArea ? String(volunteerArea).trim() : '',
+      availability: availability ? String(availability).trim() : '',
+      message: message.trim(),
+      createdAt: { $gte: twoMinutesAgo },
+    });
+
+    if (existingDuplicate) {
+      return res.status(409).json({
+        success: false,
+        message: 'This volunteer application was already submitted recently. Please wait a moment before trying again.',
       });
     }
 

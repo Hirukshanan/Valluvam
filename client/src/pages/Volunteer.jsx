@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { submitVolunteer } from '../services/volunteerService';
+import Turnstile from '../components/Turnstile';
 
 const VOLUNTEER_AREAS = [
   'Teaching & Educational Support',
@@ -56,6 +57,7 @@ function Volunteer() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
   const [serverError, setServerError] = useState('');
+  const turnstileRef = useRef(null);
 
   function validate() {
     const errs = {};
@@ -108,6 +110,25 @@ function Volunteer() {
     setErrors({});
     setIsSubmitting(true);
 
+    let token = '';
+    try {
+      token = await turnstileRef.current?.execute();
+    } catch (turnstileErr) {
+      setServerError(
+        turnstileErr.message || 'Security verification failed. Please try again.'
+      );
+      turnstileRef.current?.reset();
+      setIsSubmitting(false);
+      return;
+    }
+
+    if (!token) {
+      setServerError('Security verification could not be completed. Please try again.');
+      turnstileRef.current?.reset();
+      setIsSubmitting(false);
+      return;
+    }
+
     try {
       await submitVolunteer({
         name: form.name.trim(),
@@ -117,14 +138,17 @@ function Volunteer() {
         volunteerArea: form.volunteerArea.trim(),
         availability: form.availability.trim(),
         message: form.message.trim(),
+        turnstileToken: token,
       });
 
       setSuccess(true);
       setForm(initialForm);
+      turnstileRef.current?.reset();
     } catch (err) {
       setServerError(
         err.message || 'Something went wrong while submitting your application. Please try again.'
       );
+      turnstileRef.current?.reset();
     } finally {
       setIsSubmitting(false);
     }
@@ -437,6 +461,13 @@ function Volunteer() {
                   <p className="mt-1 text-xs text-red-600">{errors.message}</p>
                 )}
               </div>
+
+              {/* Cloudflare Turnstile Invisible Verification */}
+              <Turnstile
+                ref={turnstileRef}
+                siteKey={import.meta.env.VITE_TURNSTILE_SITE_KEY}
+                action="volunteer_form"
+              />
 
               {/* Submit */}
               <button
