@@ -11,6 +11,7 @@ import { API_BASE } from './api';
  * @param {string} [volunteerData.volunteerArea]
  * @param {string} [volunteerData.availability]
  * @param {string} volunteerData.message
+ * @param {string} [volunteerData.turnstileToken]
  * @returns {Promise<Object>} The created volunteer record
  */
 export async function submitVolunteer(volunteerData) {
