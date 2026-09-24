@@ -1,16 +1,135 @@
 import { useState } from 'react';
+import { submitContactMessage } from '../services/contactService';
 
 const fieldClassName =
-  'mt-2 block w-full rounded-md border border-charcoal-300 bg-white px-4 py-3 text-base text-charcoal-950 focus-visible:border-bronze-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-bronze-600';
+  'mt-2 block w-full rounded-md border border-charcoal-300 bg-white px-4 py-3 text-base text-charcoal-950 transition-colors focus-visible:border-bronze-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-bronze-600 disabled:opacity-60 disabled:cursor-not-allowed';
+
+const initialForm = {
+  name: '',
+  email: '',
+  preferredContactMethod: 'email',
+  whatsappNumber: '',
+  phoneNumber: '',
+  subject: '',
+  message: '',
+};
 
 function Contact() {
-  const [preferredContactMethod, setPreferredContactMethod] = useState('email');
-  const [submissionAttempted, setSubmissionAttempted] = useState(false);
+  const [form, setForm] = useState(initialForm);
+  const [errors, setErrors] = useState({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [success, setSuccess] = useState(false);
+  const [serverError, setServerError] = useState('');
 
-  function handleSubmit(event) {
+  function validate() {
+    const errs = {};
+    if (!form.name.trim()) {
+      errs.name = 'Full name is required';
+    }
+    if (!form.email.trim()) {
+      errs.email = 'Email address is required';
+    } else {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(form.email.trim())) {
+        errs.email = 'Please provide a valid email address';
+      }
+    }
+
+    if (form.preferredContactMethod === 'whatsapp') {
+      if (!form.whatsappNumber.trim()) {
+        errs.whatsappNumber = 'WhatsApp number is required when WhatsApp is selected';
+      }
+    } else if (form.preferredContactMethod === 'phone') {
+      if (!form.phoneNumber.trim()) {
+        errs.phoneNumber = 'Phone number is required when Phone is selected';
+      }
+    }
+
+    if (!form.subject.trim()) {
+      errs.subject = 'Subject is required';
+    }
+    if (!form.message.trim()) {
+      errs.message = 'Message is required';
+    }
+    return errs;
+  }
+
+  function handleChange(event) {
+    const { name, value } = event.target;
+    setForm((prev) => ({ ...prev, [name]: value }));
+    if (errors[name]) {
+      setErrors((prev) => ({ ...prev, [name]: undefined }));
+    }
+    if (serverError) {
+      setServerError('');
+    }
+    if (success) {
+      setSuccess(false);
+    }
+  }
+
+  function handleMethodChange(value) {
+    setForm((prev) => ({
+      ...prev,
+      preferredContactMethod: value,
+    }));
+    setErrors((prev) => ({
+      ...prev,
+      whatsappNumber: undefined,
+      phoneNumber: undefined,
+    }));
+    if (serverError) {
+      setServerError('');
+    }
+    if (success) {
+      setSuccess(false);
+    }
+  }
+
+  async function handleSubmit(event) {
     event.preventDefault();
-    // Keep submission local until a contact endpoint is available.
-    setSubmissionAttempted(true);
+
+    // Prevent accidental duplicate submissions
+    if (isSubmitting) return;
+
+    setServerError('');
+    setSuccess(false);
+
+    const fieldErrors = validate();
+    if (Object.keys(fieldErrors).length > 0) {
+      setErrors(fieldErrors);
+      return;
+    }
+
+    setErrors({});
+    setIsSubmitting(true);
+
+    try {
+      await submitContactMessage({
+        name: form.name.trim(),
+        email: form.email.trim(),
+        subject: form.subject.trim(),
+        message: form.message.trim(),
+        preferredContactMethod: form.preferredContactMethod,
+        whatsappNumber:
+          form.preferredContactMethod === 'whatsapp'
+            ? form.whatsappNumber.trim()
+            : '',
+        phoneNumber:
+          form.preferredContactMethod === 'phone'
+            ? form.phoneNumber.trim()
+            : '',
+      });
+
+      setSuccess(true);
+      setForm(initialForm);
+    } catch (err) {
+      setServerError(
+        err.message || 'Something went wrong while sending your message. Please try again.'
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   return (
@@ -70,11 +189,74 @@ function Contact() {
             All displayed fields are required.
           </p>
 
+          {/* Success banner */}
+          {success && (
+            <div
+              role="status"
+              className="mt-6 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-emerald-800"
+            >
+              <div className="flex items-start gap-3">
+                <svg
+                  className="h-5 w-5 shrink-0 text-emerald-600 mt-0.5"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                  aria-hidden="true"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+                <div>
+                  <p className="text-sm font-semibold">Thank you for getting in touch!</p>
+                  <p className="mt-1 text-sm text-emerald-700">
+                    Your message has been sent successfully. Our team will review your enquiry and respond to you as soon as possible.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Error banner */}
+          {serverError && (
+            <div
+              role="alert"
+              className="mt-6 rounded-xl border border-red-200 bg-red-50 p-4 text-red-800"
+            >
+              <div className="flex items-start gap-3">
+                <svg
+                  className="h-5 w-5 shrink-0 text-red-600 mt-0.5"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                  aria-hidden="true"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 7.22z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-medium">{serverError}</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setServerError('')}
+                  className="ml-auto text-xs font-semibold text-red-700 hover:underline"
+                >
+                  Dismiss
+                </button>
+              </div>
+            </div>
+          )}
+
           <form
             onSubmit={handleSubmit}
             aria-labelledby="contact-form-title"
             aria-describedby="contact-form-notice contact-form-required"
             className="mt-6 space-y-5"
+            noValidate
           >
             <div>
               <label htmlFor="contact-name" className="block text-sm font-semibold text-charcoal-950">
@@ -86,9 +268,18 @@ function Contact() {
                 type="text"
                 autoComplete="name"
                 required
-                className={fieldClassName}
+                value={form.name}
+                onChange={handleChange}
+                disabled={isSubmitting}
+                className={`${fieldClassName} ${
+                  errors.name ? 'border-red-500 focus-visible:border-red-500 focus-visible:outline-red-600' : ''
+                }`}
               />
+              {errors.name && (
+                <p className="mt-1.5 text-xs text-red-600 font-medium">{errors.name}</p>
+              )}
             </div>
+
             <div>
               <label htmlFor="contact-email" className="block text-sm font-semibold text-charcoal-950">
                 Email Address
@@ -99,9 +290,18 @@ function Contact() {
                 type="email"
                 autoComplete="email"
                 required
-                className={fieldClassName}
+                value={form.email}
+                onChange={handleChange}
+                disabled={isSubmitting}
+                className={`${fieldClassName} ${
+                  errors.email ? 'border-red-500 focus-visible:border-red-500 focus-visible:outline-red-600' : ''
+                }`}
               />
+              {errors.email && (
+                <p className="mt-1.5 text-xs text-red-600 font-medium">{errors.email}</p>
+              )}
             </div>
+
             <fieldset className="w-full min-w-0 rounded-xl border border-bronze-100 bg-bronze-50 p-6 pt-6 sm:p-5 sm:pt-7">
               <legend className="float-left w-full mb-2 px-2 text-base font-semibold text-charcoal-950">
                 How can we reach you?
@@ -120,11 +320,9 @@ function Contact() {
                       type="radio"
                       name="preferredContactMethod"
                       value={value}
-                      checked={preferredContactMethod === value}
-                      onChange={(event) => {
-                        setPreferredContactMethod(event.target.value);
-                        setSubmissionAttempted(false);
-                      }}
+                      checked={form.preferredContactMethod === value}
+                      onChange={() => handleMethodChange(value)}
+                      disabled={isSubmitting}
                       required
                       className="h-4 w-4 accent-bronze-700 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-bronze-600"
                     />
@@ -132,30 +330,50 @@ function Contact() {
                   </label>
                 ))}
               </div>
-              {preferredContactMethod === 'email' ? (
+
+              {form.preferredContactMethod === 'email' ? (
                 <p className="mt-3 text-sm leading-6 text-charcoal-700">
                   Uses the Email Address entered above.
                 </p>
               ) : (
                 <div className="mt-4">
                   <label
-                    htmlFor={`contact-${preferredContactMethod}-number`}
+                    htmlFor={`contact-${form.preferredContactMethod}-number`}
                     className="block text-sm font-semibold text-charcoal-950"
                   >
-                    {preferredContactMethod === 'whatsapp' ? 'WhatsApp Number' : 'Phone Number'}
+                    {form.preferredContactMethod === 'whatsapp' ? 'WhatsApp Number' : 'Phone Number'}
                   </label>
                   <input
-                    key={preferredContactMethod}
-                    id={`contact-${preferredContactMethod}-number`}
-                    name={`${preferredContactMethod}Number`}
+                    key={form.preferredContactMethod}
+                    id={`contact-${form.preferredContactMethod}-number`}
+                    name={form.preferredContactMethod === 'whatsapp' ? 'whatsappNumber' : 'phoneNumber'}
                     type="tel"
                     autoComplete="tel"
                     required
-                    className={fieldClassName}
+                    value={
+                      form.preferredContactMethod === 'whatsapp'
+                        ? form.whatsappNumber
+                        : form.phoneNumber
+                    }
+                    onChange={handleChange}
+                    disabled={isSubmitting}
+                    className={`${fieldClassName} ${
+                      (form.preferredContactMethod === 'whatsapp' && errors.whatsappNumber) ||
+                      (form.preferredContactMethod === 'phone' && errors.phoneNumber)
+                        ? 'border-red-500 focus-visible:border-red-500 focus-visible:outline-red-600'
+                        : ''
+                    }`}
                   />
+                  {form.preferredContactMethod === 'whatsapp' && errors.whatsappNumber && (
+                    <p className="mt-1.5 text-xs text-red-600 font-medium">{errors.whatsappNumber}</p>
+                  )}
+                  {form.preferredContactMethod === 'phone' && errors.phoneNumber && (
+                    <p className="mt-1.5 text-xs text-red-600 font-medium">{errors.phoneNumber}</p>
+                  )}
                 </div>
               )}
             </fieldset>
+
             <div>
               <label htmlFor="contact-subject" className="block text-sm font-semibold text-charcoal-950">
                 Subject
@@ -165,9 +383,18 @@ function Contact() {
                 name="subject"
                 type="text"
                 required
-                className={fieldClassName}
+                value={form.subject}
+                onChange={handleChange}
+                disabled={isSubmitting}
+                className={`${fieldClassName} ${
+                  errors.subject ? 'border-red-500 focus-visible:border-red-500 focus-visible:outline-red-600' : ''
+                }`}
               />
+              {errors.subject && (
+                <p className="mt-1.5 text-xs text-red-600 font-medium">{errors.subject}</p>
+              )}
             </div>
+
             <div>
               <label htmlFor="contact-message" className="block text-sm font-semibold text-charcoal-950">
                 Message
@@ -177,21 +404,35 @@ function Contact() {
                 name="message"
                 rows={5}
                 required
-                className={`${fieldClassName} resize-y`}
+                value={form.message}
+                onChange={handleChange}
+                disabled={isSubmitting}
+                className={`${fieldClassName} resize-y ${
+                  errors.message ? 'border-red-500 focus-visible:border-red-500 focus-visible:outline-red-600' : ''
+                }`}
               />
+              {errors.message && (
+                <p className="mt-1.5 text-xs text-red-600 font-medium">{errors.message}</p>
+              )}
             </div>
-            {/* Integrate Cloudflare Turnstile or Google reCAPTCHA here during the
-                backend/security stage, with token verification on the backend. */}
+
             <button
               type="submit"
-              className="inline-flex min-h-12 w-full items-center justify-center rounded-md border border-bronze-700 bg-bronze-700 px-6 py-3 text-sm font-semibold text-white transition-colors hover:border-bronze-800 hover:bg-bronze-800 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-bronze-600 sm:w-auto"
+              disabled={isSubmitting}
+              className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-md border border-bronze-700 bg-bronze-700 px-6 py-3 text-sm font-semibold text-white transition-colors hover:border-bronze-800 hover:bg-bronze-800 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-bronze-600 disabled:opacity-60 disabled:cursor-not-allowed sm:w-auto"
             >
-              Send Message
+              {isSubmitting ? (
+                <>
+                  <svg className="h-4 w-4 animate-spin text-white" viewBox="0 0 24 24" fill="none">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+                  </svg>
+                  Sending message…
+                </>
+              ) : (
+                'Send Message'
+              )}
             </button>
-            <p role="status" className="text-sm leading-6 text-charcoal-700">
-              {submissionAttempted &&
-                'Your message has not been sent. Please contact valluvamofficial@gmail.com directly.'}
-            </p>
           </form>
         </section>
       </div>
@@ -200,4 +441,3 @@ function Contact() {
 }
 
 export default Contact;
-
