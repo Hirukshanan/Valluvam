@@ -94,6 +94,22 @@ exports.createContact = async (req, res) => {
       });
     }
 
+    // Duplicate message prevention (within 2 minutes)
+    const twoMinutesAgo = new Date(Date.now() - 2 * 60 * 1000);
+    const existingDuplicate = await Contact.findOne({
+      email: email.trim().toLowerCase(),
+      subject: subject.trim(),
+      message: message.trim(),
+      createdAt: { $gte: twoMinutesAgo },
+    });
+
+    if (existingDuplicate) {
+      return res.status(409).json({
+        success: false,
+        message: 'This exact message was already received recently. Please wait a moment before sending again.',
+      });
+    }
+
     const contact = await Contact.create({
       name: name.trim(),
       email: email.trim().toLowerCase(),
