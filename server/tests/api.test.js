@@ -49,11 +49,16 @@ async function runTestSuite() {
   const adminToken = jwt.sign({ id: admin._id, role: admin.role }, process.env.JWT_SECRET, { expiresIn: '1h' });
 
   console.log('\n--- 1. Health & 404 Route Handling ---');
-  await test('GET /health returns 200 and success', async () => {
+  await test('GET /health returns 200 and healthy status when MongoDB is connected', async () => {
     const res = await fetch(`${baseUrl}/health`);
     const data = await res.json();
     assert(res.status === 200, `Expected 200, got ${res.status}`);
     assert(data.success === true, 'Expected success: true');
+    assert(data.status === 'healthy', `Expected status: healthy, got ${data.status}`);
+    assert(data.database === 'connected', `Expected database: connected, got ${data.database}`);
+    assert(typeof data.environment === 'string', 'Expected environment string');
+    assert(typeof data.timestamp === 'string', 'Expected timestamp string');
+    assert(!data.uri && !data.secret && !data.password && !data.jwt, 'No sensitive data exposed');
   });
 
   await test('GET /health returns expected security headers (Helmet)', async () => {
@@ -419,12 +424,25 @@ async function runTestSuite() {
     assert(Array.isArray(data.data) && data.data.length > 0, 'Must have support options');
   });
 
+  console.log('\n--- 11. Health Check with Disconnected Database ---');
+  await test('GET /health returns 503 degraded when MongoDB is disconnected', async () => {
+    await mongoose.disconnect();
+    const res = await fetch(`${baseUrl}/health`);
+    const data = await res.json();
+    assert(res.status === 503, `Expected 503, got ${res.status}`);
+    assert(data.success === false, 'Expected success: false');
+    assert(data.status === 'degraded', `Expected status: degraded, got ${data.status}`);
+    assert(data.database === 'disconnected', `Expected database: disconnected, got ${data.database}`);
+    assert(typeof data.environment === 'string', 'Expected environment string');
+    assert(typeof data.timestamp === 'string', 'Expected timestamp string');
+    assert(!data.uri && !data.secret && !data.password && !data.jwt, 'No sensitive data exposed');
+  });
+
   console.log(`\n========================================`);
   console.log(`Test Suite Results: ${passed} passed, ${failed} failed`);
   console.log(`========================================`);
 
   server.close();
-  await mongoose.disconnect();
   process.exit(failed > 0 ? 1 : 0);
 }
 
