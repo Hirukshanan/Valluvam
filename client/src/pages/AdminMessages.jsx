@@ -106,8 +106,8 @@ function Toast({ message, onClose }) {
 // ---------------------------------------------------------------------------
 function DeleteDialog({ messageItem, onConfirm, onCancel, isDeleting }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-charcoal-950/40 px-4">
-      <div className="w-full max-w-sm rounded-xl border border-bronze-100 bg-white p-6 shadow-lg">
+    <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-charcoal-950/40 p-4">
+      <div className="w-full max-w-sm rounded-xl border border-bronze-100 bg-white p-6 shadow-lg my-auto">
         <h3 className="text-lg font-semibold text-charcoal-900">Delete Message</h3>
         <p className="mt-2 text-sm text-charcoal-600">
           Are you sure you want to delete the message from{' '}
@@ -164,8 +164,8 @@ function DetailsModal({
     : '';
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-charcoal-950/40 p-4 overflow-y-auto">
-      <div className="w-full max-w-2xl rounded-2xl border border-bronze-100 bg-white p-6 shadow-xl sm:p-8 my-8">
+    <div className="fixed inset-0 z-50 flex min-h-full items-center justify-center overflow-y-auto bg-charcoal-950/40 p-4">
+      <div className="w-full max-w-2xl rounded-2xl border border-bronze-100 bg-white p-4 shadow-xl sm:p-8 my-auto">
         {/* Header */}
         <div className="flex items-start justify-between gap-4 border-b border-bronze-100 pb-4">
           <div>
@@ -325,7 +325,7 @@ function DetailsModal({
         </div>
 
         {/* Modal Actions */}
-        <div className="mt-6 flex items-center justify-between border-t border-bronze-100 pt-4">
+        <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-bronze-100 pt-4">
           <button
             type="button"
             onClick={() => onDeleteClick(messageItem)}
@@ -589,8 +589,8 @@ function AdminMessages() {
           </div>
         ) : (
           <>
-            {/* Desktop Table View */}
-            <div className="hidden overflow-hidden rounded-xl border border-bronze-100 bg-white shadow-xs md:block">
+            {/* Desktop / Tablet Table View */}
+            <div className="hidden overflow-x-auto rounded-xl border border-bronze-100 bg-white shadow-xs md:block">
               <table className="w-full text-left text-sm">
                 <thead>
                   <tr className="border-b border-bronze-100 bg-bronze-50/60">
@@ -732,7 +732,7 @@ function AdminMessages() {
                       </p>
                     </div>
 
-                    <div className="mt-3 flex items-center justify-between border-t border-bronze-50 pt-2.5 text-xs text-charcoal-600">
+                    <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-bronze-50 pt-2.5 text-xs text-charcoal-600">
                       <div className="flex items-center gap-2">
                         <span
                           className={`rounded-md px-2 py-0.5 text-[11px] font-medium border ${methConfig.badgeClass}`}

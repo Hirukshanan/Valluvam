@@ -75,8 +75,8 @@ function DeleteDialog({ memberName, memberRole, onConfirm, onCancel, isDeleting 
     : `"${memberRole}"`;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-charcoal-950/40 px-4">
-      <div className="w-full max-w-sm rounded-xl border border-bronze-100 bg-white p-6 shadow-lg">
+    <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-charcoal-950/40 p-4">
+      <div className="w-full max-w-sm rounded-xl border border-bronze-100 bg-white p-6 shadow-lg my-auto">
         <h3 className="text-lg font-semibold text-charcoal-900">Delete Team Member</h3>
         <p className="mt-2 text-sm text-charcoal-600">
           Are you sure you want to delete <span className="font-medium text-charcoal-900">{displayName}</span>?
@@ -450,7 +450,7 @@ function MemberForm({ initial, onSubmit, onCancel, isSubmitting, nextOrder = 1 }
       </div>
 
       {/* Form Action Buttons */}
-      <div className="flex items-center gap-3 pt-3 border-t border-bronze-100">
+      <div className="flex flex-wrap items-center gap-3 pt-3 border-t border-bronze-100">
         <button
           type="submit"
           disabled={isSubmitting || isUploadingPhoto}
@@ -716,8 +716,8 @@ function AdminTeam() {
           </div>
         ) : (
           <>
-            {/* Desktop Table View */}
-            <div className="hidden overflow-hidden rounded-xl border border-bronze-100 bg-white shadow-sm md:block">
+            {/* Desktop / Tablet Table View */}
+            <div className="hidden overflow-x-auto rounded-xl border border-bronze-100 bg-white shadow-sm md:block">
               <table className="w-full text-left text-sm">
                 <thead>
                   <tr className="border-b border-bronze-100 bg-bronze-50/60">
@@ -915,7 +915,7 @@ function AdminTeam() {
                     </p>
                   )}
 
-                  <div className="mt-3 flex items-center justify-end gap-2 border-t border-bronze-50 pt-3">
+                  <div className="mt-3 flex flex-wrap items-center justify-end gap-2 border-t border-bronze-50 pt-3">
                     <button
                       type="button"
                       onClick={() => handleToggleActive(member)}

@@ -375,7 +375,7 @@ function AlbumForm({ initial, onSubmit, onCancel, isSubmitting }) {
       </div>
 
       {/* Actions */}
-      <div className="flex items-center gap-3 pt-2">
+      <div className="flex flex-wrap items-center gap-3 pt-2">
         <button
           type="submit"
           disabled={isSubmitting}
@@ -408,8 +408,8 @@ function AlbumForm({ initial, onSubmit, onCancel, isSubmitting }) {
 
 function DeleteDialog({ albumTitle, onConfirm, onCancel, isDeleting }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-charcoal-950/40 px-4">
-      <div className="w-full max-w-sm rounded-xl border border-bronze-100 bg-white p-6 shadow-lg">
+    <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-charcoal-950/40 p-4">
+      <div className="w-full max-w-sm rounded-xl border border-bronze-100 bg-white p-6 shadow-lg my-auto">
         <h3 className="text-lg font-semibold text-charcoal-900">Delete Album</h3>
         <p className="mt-2 text-sm text-charcoal-600">
           Are you sure you want to delete{' '}
@@ -451,8 +451,8 @@ function DeleteDialog({ albumTitle, onConfirm, onCancel, isDeleting }) {
 
 function DeletePhotoDialog({ photo, onConfirm, onCancel, isDeleting }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-charcoal-950/40 px-4">
-      <div className="w-full max-w-sm rounded-xl border border-bronze-100 bg-white p-6 shadow-lg">
+    <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-charcoal-950/40 p-4">
+      <div className="w-full max-w-sm rounded-xl border border-bronze-100 bg-white p-6 shadow-lg my-auto">
         <h3 className="text-lg font-semibold text-charcoal-900">Remove Photo</h3>
         <p className="mt-2 text-sm text-charcoal-600">
           Are you sure you want to remove this photo from the album? This action cannot be undone.
@@ -1374,8 +1374,8 @@ function AdminGallery() {
               </div>
             ) : (
               <>
-                {/* Desktop table */}
-                <div className="hidden overflow-hidden rounded-xl border border-bronze-100 bg-white shadow-sm md:block">
+                {/* Desktop / tablet table */}
+                <div className="hidden overflow-x-auto rounded-xl border border-bronze-100 bg-white shadow-sm md:block">
                   <table className="w-full text-left text-sm">
                     <thead>
                       <tr className="border-b border-bronze-100 bg-bronze-50/60">
@@ -1491,11 +1491,11 @@ function AdminGallery() {
                           </p>
                         </div>
                       </div>
-                      <div className="mt-3 flex items-center justify-between border-t border-bronze-50 pt-3">
+                      <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-bronze-50 pt-3">
                         <span className="inline-flex items-center rounded-full bg-bronze-100/70 px-2.5 py-0.5 text-xs font-semibold text-bronze-800">
                           {album.category}
                         </span>
-                        <div className="flex gap-2">
+                        <div className="flex flex-wrap items-center gap-2">
                           <button
                             type="button"
                             onClick={() => handleManagePhotos(album)}

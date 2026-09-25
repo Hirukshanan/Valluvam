@@ -354,7 +354,7 @@ function EventForm({ initial, onSubmit, onCancel, isSubmitting }) {
       </div>
 
       {/* Actions */}
-      <div className="flex items-center gap-3 pt-2">
+      <div className="flex flex-wrap items-center gap-3 pt-2">
         <button
           type="submit"
           disabled={isSubmitting || isUploadingImage}
@@ -387,8 +387,8 @@ function EventForm({ initial, onSubmit, onCancel, isSubmitting }) {
 
 function DeleteDialog({ eventTitle, onConfirm, onCancel, isDeleting }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-charcoal-950/40 px-4">
-      <div className="w-full max-w-sm rounded-xl border border-bronze-100 bg-white p-6 shadow-lg">
+    <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-charcoal-950/40 p-4">
+      <div className="w-full max-w-sm rounded-xl border border-bronze-100 bg-white p-6 shadow-lg my-auto">
         <h3 className="text-lg font-semibold text-charcoal-900">Delete Event</h3>
         <p className="mt-2 text-sm text-charcoal-600">
           Are you sure you want to delete{' '}
@@ -626,8 +626,8 @@ function AdminEvents() {
           </div>
         ) : (
           <>
-            {/* Desktop table */}
-            <div className="hidden overflow-hidden rounded-xl border border-bronze-100 bg-white shadow-sm md:block">
+            {/* Desktop / tablet table */}
+            <div className="hidden overflow-x-auto rounded-xl border border-bronze-100 bg-white shadow-sm md:block">
               <table className="w-full text-left text-sm">
                 <thead>
                   <tr className="border-b border-bronze-100 bg-bronze-50/60">
@@ -711,7 +711,7 @@ function AdminEvents() {
                   <p className="mt-1.5 text-xs text-charcoal-500">
                     {formatDate(event.date)} · {event.location}
                   </p>
-                  <div className="mt-3 flex gap-2 border-t border-bronze-50 pt-3">
+                  <div className="mt-3 flex flex-wrap gap-2 border-t border-bronze-50 pt-3">
                     <button
                       type="button"
                       onClick={() => handleEdit(event)}

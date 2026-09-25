@@ -70,12 +70,12 @@ function Toast({ message, onClose }) {
 function DeleteDialog({ optionTitle, onConfirm, onCancel, isDeleting }) {
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-charcoal-950/40 p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-charcoal-950/40 p-4"
       role="dialog"
       aria-modal="true"
       aria-labelledby="delete-dialog-title"
     >
-      <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl">
+      <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl my-auto">
         <h3 id="delete-dialog-title" className="text-lg font-semibold text-charcoal-900">
           Delete Support Option
         </h3>
@@ -274,7 +274,7 @@ function SupportOptionForm({ initial, onSubmit, onCancel, isSubmitting }) {
       </div>
 
       {/* Actions */}
-      <div className="flex items-center gap-3 pt-3">
+      <div className="flex flex-wrap items-center gap-3 pt-3">
         <button
           type="submit"
           disabled={isSubmitting}
@@ -473,8 +473,8 @@ function AdminSupport() {
           </div>
         ) : (
           <>
-            {/* Desktop Table */}
-            <div className="hidden overflow-hidden rounded-xl border border-bronze-100 bg-white shadow-sm md:block">
+            {/* Desktop / Tablet Table */}
+            <div className="hidden overflow-x-auto rounded-xl border border-bronze-100 bg-white shadow-sm md:block">
               <table className="w-full text-left text-sm">
                 <thead>
                   <tr className="border-b border-bronze-100 bg-bronze-50/60">
@@ -580,7 +580,7 @@ function AdminSupport() {
                   <p className="mt-2 text-xs text-charcoal-600 line-clamp-3">
                     {option.description}
                   </p>
-                  <div className="mt-3 flex items-center justify-between border-t border-bronze-50 pt-3">
+                  <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-bronze-50 pt-3">
                     <span className="text-[11px] text-charcoal-400 capitalize">
                       Theme: {option.icon || 'heart'}
                     </span>
