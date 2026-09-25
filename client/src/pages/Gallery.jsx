@@ -27,6 +27,7 @@ function formatAlbumDate(dateStr) {
  */
 function AlbumCard({ album, onClick }) {
   const { t } = useLanguage();
+  const [imgError, setImgError] = useState(false);
   const photoCount =
     album.photos && album.photos.length > 0
       ? album.photos.length
@@ -55,15 +56,14 @@ function AlbumCard({ album, onClick }) {
     >
       {/* 4:3 fixed aspect-ratio image container */}
       <div className="relative aspect-[4/3] w-full overflow-hidden bg-charcoal-50 flex items-center justify-center">
-        {displayImage ? (
+        {displayImage && !imgError ? (
           <img
             src={displayImage}
             alt={album.title}
             loading="lazy"
+            decoding="async"
+            onError={() => setImgError(true)}
             className="h-full w-full object-contain transition-transform duration-300 group-hover:scale-105"
-            onError={(e) => {
-              e.currentTarget.style.display = 'none';
-            }}
           />
         ) : (
           <div className="flex flex-col items-center justify-center text-charcoal-400">
@@ -237,6 +237,11 @@ function AlbumViewerModal({ album, onClose }) {
         : [];
 
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [photoError, setPhotoError] = useState(false);
+
+  useEffect(() => {
+    setPhotoError(false);
+  }, [currentIndex]);
 
   const totalPhotos = photos.length;
   const currentPhoto = photos[currentIndex];
@@ -338,17 +343,22 @@ function AlbumViewerModal({ album, onClose }) {
         )}
 
         {/* Current Large Photo */}
-        {currentPhoto?.imageUrl ? (
+        {currentPhoto?.imageUrl && !photoError ? (
           <div className="flex h-full w-full items-center justify-center">
             <img
               src={currentPhoto.imageUrl}
               alt={`${album.title} - photo ${currentIndex + 1}`}
+              decoding="async"
+              onError={() => setPhotoError(true)}
               className="max-h-[68vh] sm:max-h-[75vh] max-w-full w-auto h-auto object-contain rounded-lg shadow-2xl select-none"
             />
           </div>
         ) : (
-          <div className="text-center text-charcoal-400">
-            <p>{t('gallery.noImageForPhoto')}</p>
+          <div className="flex flex-col items-center justify-center text-charcoal-400 p-8">
+            <svg className="h-12 w-12 text-charcoal-500 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+            <p className="text-sm font-medium">{t('gallery.noImageForPhoto')}</p>
           </div>
         )}
 
@@ -391,6 +401,11 @@ function AlbumViewerModal({ album, onClose }) {
                   <img
                     src={photo.imageUrl}
                     alt=""
+                    loading="lazy"
+                    decoding="async"
+                    onError={(e) => {
+                      e.currentTarget.style.display = 'none';
+                    }}
                     className="h-full w-full object-contain"
                   />
                 </button>

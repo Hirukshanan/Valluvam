@@ -38,6 +38,7 @@ function isRecentEvent(createdAt) {
  */
 function EventCard({ image, title, date, location, description, createdAt }) {
   const { t } = useLanguage();
+  const [imgError, setImgError] = useState(false);
   const formattedDate = date
     ? new Intl.DateTimeFormat('en-GB', {
         day: 'numeric',
@@ -50,11 +51,32 @@ function EventCard({ image, title, date, location, description, createdAt }) {
 
   return (
     <article className="flex flex-col overflow-hidden rounded-xl border border-bronze-100 bg-white">
-      {/* Event image — shown only when a valid URL exists */}
-      {image ? (
-        <img src={image} alt="" className="h-52 w-full object-cover" />
+      {/* Event image — shown only when a valid URL exists and has not errored */}
+      {image && !imgError ? (
+        <div className="h-52 w-full overflow-hidden bg-bronze-50">
+          <img
+            src={image}
+            alt={title || ''}
+            loading="lazy"
+            decoding="async"
+            onError={() => setImgError(true)}
+            className="h-full w-full object-cover"
+          />
+        </div>
       ) : (
-        <div aria-hidden="true" className="h-52 w-full bg-bronze-50" />
+        <div aria-hidden="true" className="flex h-52 w-full items-center justify-center bg-bronze-50 text-bronze-300">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={1.5}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="h-8 w-8"
+          >
+            <path d="M8 2v3M16 2v3M3 8h18M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z" />
+          </svg>
+        </div>
       )}
 
       <div className="flex flex-1 flex-col p-6">
