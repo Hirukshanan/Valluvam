@@ -3,6 +3,10 @@ const cors = require('cors');
 
 const app = express();
 
+// Trust the first reverse proxy (Cloudflare, Render, Railway, Nginx, etc.)
+// Ensures accurate client IP identification for express-rate-limit and Turnstile
+app.set('trust proxy', 1);
+
 // ---------------------------------------------------------------------------
 // Middleware
 // ---------------------------------------------------------------------------
@@ -66,6 +70,16 @@ app.use('/api/settings', require('./routes/settings'));
 app.use('/api/support', require('./routes/support'));
 
 app.use('/api/admin', require('./routes/admin'));
+
+// ---------------------------------------------------------------------------
+// 404 Catch-All for undefined routes — ensures JSON response
+// ---------------------------------------------------------------------------
+app.use((req, res) => {
+  res.status(404).json({
+    success: false,
+    message: `Cannot ${req.method} ${req.originalUrl}`,
+  });
+});
 
 // ---------------------------------------------------------------------------
 // Central Error Handler — guarantees all errors return JSON with CORS headers

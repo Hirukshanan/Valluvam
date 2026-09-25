@@ -193,7 +193,7 @@ exports.updateTeamMember = async (req, res) => {
     }
 
     const updatedMember = await Team.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
+      returnDocument: 'after',
       runValidators: true,
     });
 

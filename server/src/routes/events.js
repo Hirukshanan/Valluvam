@@ -42,6 +42,7 @@ function uploadMiddleware(req, res, next) {
 router.get('/', getAllEvents);
 
 // Admin-only endpoints (must be before /:id to avoid conflict)
+router.get('/admin', protect, authorize('admin'), getAllEventsAdmin);
 router.get('/admin-list', protect, authorize('admin'), getAllEventsAdmin);
 router.post('/upload', protect, authorize('admin'), uploadMiddleware, uploadEventImage);
 router.post('/', protect, authorize('admin'), createEvent);

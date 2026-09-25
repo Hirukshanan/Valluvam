@@ -225,7 +225,7 @@ exports.updateContact = async (req, res) => {
     }
 
     const contact = await Contact.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
+      returnDocument: 'after',
       runValidators: true,
     });
 
