@@ -1,11 +1,41 @@
 const express = require('express');
 const cors = require('cors');
+const helmet = require('helmet');
 
 const app = express();
 
 // Trust the first reverse proxy (Cloudflare, Render, Railway, Nginx, etc.)
 // Ensures accurate client IP identification for express-rate-limit and Turnstile
 app.set('trust proxy', 1);
+
+// ---------------------------------------------------------------------------
+// Security Middleware & HTTP Headers
+// ---------------------------------------------------------------------------
+app.use(
+  helmet({
+    // Allow CORS-enabled cross-origin clients (e.g. React frontend) to access resources
+    crossOriginResourcePolicy: { policy: 'cross-origin' },
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: ["'self'", 'https://challenges.cloudflare.com'],
+        frameSrc: ["'self'", 'https://challenges.cloudflare.com'],
+        imgSrc: ["'self'", 'data:', 'https://res.cloudinary.com', 'blob:'],
+        connectSrc: [
+          "'self'",
+          'https://challenges.cloudflare.com',
+          'https://api.cloudinary.com',
+        ],
+        styleSrc: ["'self'", "'unsafe-inline'"],
+        fontSrc: ["'self'", 'data:'],
+        objectSrc: ["'none'"],
+        baseUri: ["'self'"],
+        formAction: ["'self'"],
+        upgradeInsecureRequests: process.env.NODE_ENV === 'production' ? [] : null,
+      },
+    },
+  })
+);
 
 // ---------------------------------------------------------------------------
 // Middleware
