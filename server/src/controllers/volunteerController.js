@@ -207,7 +207,7 @@ exports.updateVolunteer = async (req, res) => {
     }
 
     const volunteer = await Volunteer.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
+      returnDocument: 'after',
       runValidators: true,
     });
 

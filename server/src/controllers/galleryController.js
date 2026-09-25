@@ -192,7 +192,7 @@ exports.updateAlbum = async (req, res) => {
     }
 
     const album = await Gallery.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,            // return the updated document
+      returnDocument: 'after', // return the updated document
       runValidators: true,  // apply schema validators on update
     });
 

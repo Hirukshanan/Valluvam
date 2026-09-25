@@ -46,6 +46,7 @@ router.get('/', getAllTeamMembers);
 // ---------------------------------------------------------------------------
 // Admin-only endpoints (must be defined before /:id to avoid route collision)
 // ---------------------------------------------------------------------------
+router.get('/admin', protect, authorize('admin'), getAllTeamMembersAdmin);
 router.get('/admin-list', protect, authorize('admin'), getAllTeamMembersAdmin);
 router.post('/upload', protect, authorize('admin'), uploadMiddleware, uploadPhoto);
 router.post('/', protect, authorize('admin'), createTeamMember);

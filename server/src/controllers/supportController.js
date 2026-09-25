@@ -154,7 +154,7 @@ exports.updateSupport = async (req, res) => {
     if (req.body.icon !== undefined) updates.icon = req.body.icon.trim() || 'heart';
 
     const updatedOption = await Support.findByIdAndUpdate(req.params.id, updates, {
-      new: true,
+      returnDocument: 'after',
       runValidators: true,
     });
 
