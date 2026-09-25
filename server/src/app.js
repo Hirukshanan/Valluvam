@@ -61,6 +61,8 @@ app.use('/api/volunteer', require('./routes/volunteers'));
 app.use('/api/contact', require('./routes/contact'));
 app.use('/api/contacts', require('./routes/contact'));
 
+app.use('/api/settings', require('./routes/settings'));
+
 // ---------------------------------------------------------------------------
 // Central Error Handler — guarantees all errors return JSON with CORS headers
 // ---------------------------------------------------------------------------
