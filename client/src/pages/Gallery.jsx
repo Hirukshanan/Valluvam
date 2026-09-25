@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { fetchGalleryAlbums } from '../services/galleryService';
 import { useSettings } from '../context/SettingsContext';
 import { useLanguage } from '../context/LanguageContext';
+import SEO from '../components/SEO';
 
 /**
  * Format ISO date string into readable British English date.
@@ -429,6 +430,10 @@ function Gallery() {
 
   return (
     <main>
+      <SEO
+        title="Gallery"
+        description={`Browse photos from ${settings.organizationName}'s activities, educational programmes, rural school visits, and community relief initiatives.`}
+      />
       {/* Page header */}
       <header className="bg-bronze-50 py-16 sm:py-20 lg:py-24">
         <div className="mx-auto max-w-7xl px-6">

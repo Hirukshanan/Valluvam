@@ -3,6 +3,7 @@ import handpic from '../assets/Handpic.jpeg';
 import { fetchActiveTeamMembers } from '../services/teamService';
 import { useSettings } from '../context/SettingsContext';
 import { useLanguage } from '../context/LanguageContext';
+import SEO from '../components/SEO';
 
 const getValues = (t, organizationName) => [
   {
@@ -158,6 +159,10 @@ function About() {
 
   return (
     <main>
+      <SEO
+        title="About Us"
+        description={`Learn about ${settings.organizationName}'s mission, core values, leadership team, and community-centered approach to educational support and social service.`}
+      />
       {/* ── 1. Page introduction ─────────────────────────────────────── */}
       <header className="bg-bronze-50 py-16 sm:py-20 lg:py-0">
         <div className="mx-auto grid max-w-7xl items-center gap-10 px-6 lg:grid-cols-2 lg:gap-16">

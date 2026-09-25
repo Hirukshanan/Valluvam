@@ -3,6 +3,7 @@ import { submitContactMessage } from '../services/contactService';
 import Turnstile from '../components/Turnstile';
 import { useSettings } from '../context/SettingsContext';
 import { useLanguage } from '../context/LanguageContext';
+import SEO from '../components/SEO';
 
 const fieldClassName =
   'mt-2 block w-full rounded-md border border-charcoal-300 bg-white px-4 py-3 text-base text-charcoal-950 transition-colors focus-visible:border-bronze-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-bronze-600 disabled:opacity-60 disabled:cursor-not-allowed';
@@ -162,6 +163,10 @@ function Contact() {
 
   return (
     <main>
+      <SEO
+        title="Contact Us"
+        description={`Get in touch with ${settings.organizationName} for general enquiries, volunteering opportunities, community support, or collaboration in ${settings.location}.`}
+      />
       <header className="bg-bronze-50 py-16 sm:py-20 lg:py-24">
         <div className="mx-auto max-w-7xl px-6">
           <div className="max-w-2xl">

@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useSettings } from '../context/SettingsContext';
 import { useLanguage } from '../context/LanguageContext';
 import { fetchSupportOptions } from '../services/supportService';
+import SEO from '../components/SEO';
 
 const ICON_PATHS = {
   student:
@@ -58,6 +59,10 @@ function Support() {
 
   return (
     <main>
+      <SEO
+        title="Support Us"
+        description={`Discover meaningful ways to support ${settings.organizationName} through student assistance, educational materials, initiative partnerships, and community relief.`}
+      />
       {/* Page header */}
       <header className="bg-bronze-50 py-16 sm:py-20 lg:py-24">
         <div className="mx-auto max-w-7xl px-6">
