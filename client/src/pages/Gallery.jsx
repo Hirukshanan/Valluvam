@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { fetchGalleryAlbums } from '../services/galleryService';
+import { useSettings } from '../context/SettingsContext';
 
 /**
  * Format ISO date string into readable British English date.
@@ -181,6 +182,7 @@ function GalleryErrorState({ error, onRetry }) {
  * Shown when no gallery albums are available yet.
  */
 function GalleryEmptyState() {
+  const { settings } = useSettings();
   return (
     <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-bronze-200 bg-bronze-50 px-6 py-24 text-center">
       <div
@@ -201,7 +203,7 @@ function GalleryEmptyState() {
         </svg>
       </div>
       <p className="text-base font-medium text-charcoal-950">
-        Our gallery will be updated with photos from Valluvam's activities and events.
+        Our gallery will be updated with photos from {settings.organizationName}'s activities and events.
       </p>
       <p className="mt-2 max-w-sm text-sm leading-6 text-charcoal-500">
         Follow us on social media to see photos from our latest community and
@@ -396,6 +398,7 @@ function AlbumViewerModal({ album, onClose }) {
 }
 
 function Gallery() {
+  const { settings } = useSettings();
   const [albums, setAlbums] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -429,7 +432,7 @@ function Gallery() {
               Gallery
             </h1>
             <p className="mt-6 text-base leading-8 text-charcoal-700 sm:text-lg">
-              A look at Valluvam's activities, events, educational support, and
+              A look at {settings.organizationName}'s activities, events, educational support, and
               community work through photographs. Images from our initiatives
               and programmes will be shared here.
             </p>
@@ -453,7 +456,7 @@ function Gallery() {
                 Photo Albums
               </h2>
               <p className="mt-4 text-base leading-8 text-charcoal-700 sm:text-lg">
-                Explore moments from Valluvam's community, educational, and social initiatives.
+                Explore moments from {settings.organizationName}'s community, educational, and social initiatives.
               </p>
             </div>
 
@@ -480,7 +483,7 @@ function Gallery() {
             {!loading && !error && albums.length > 0 && (
               <div
                 className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
-                aria-label="Valluvam gallery albums"
+                aria-label={`${settings.organizationName} gallery albums`}
               >
                 {albums.map((album) => (
                   <AlbumCard

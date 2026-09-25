@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { NavLink, useNavigate, Outlet } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useSettings } from '../context/SettingsContext';
 import logo from '../assets/logo.jpg';
 
 const navItems = [
@@ -64,6 +65,7 @@ const icons = {
 
 function AdminLayout() {
   const { user, logout } = useAuth();
+  const { settings } = useSettings();
   const navigate = useNavigate();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
@@ -92,13 +94,13 @@ function AdminLayout() {
         <div className="flex items-center gap-3 border-b border-bronze-100 px-5 py-4">
           <img
             src={logo}
-            alt="Valluvam"
+            alt={settings.organizationName}
             width={40}
             height={40}
             className="h-10 w-10 rounded-full object-contain"
           />
           <div className="min-w-0">
-            <p className="truncate text-sm font-semibold text-charcoal-900">Valluvam</p>
+            <p className="truncate text-sm font-semibold text-charcoal-900">{settings.organizationName}</p>
             <p className="text-xs text-charcoal-500">Admin Panel</p>
           </div>
 

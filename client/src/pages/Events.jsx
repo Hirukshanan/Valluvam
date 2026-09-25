@@ -9,6 +9,7 @@
 
 import { useEffect, useState } from 'react';
 import { fetchEvents } from '../services/eventService';
+import { useSettings } from '../context/SettingsContext';
 
 // ---------------------------------------------------------------------------
 // Subcomponents
@@ -123,6 +124,7 @@ function EventCard({ image, title, date, location, description, createdAt }) {
 
 /** Shown when no events are available. */
 function EventsEmptyState() {
+  const { settings } = useSettings();
   return (
     <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-bronze-200 bg-bronze-50 px-6 py-20 text-center">
       <div
@@ -146,7 +148,7 @@ function EventsEmptyState() {
       </p>
       <p className="mt-2 max-w-sm text-sm leading-6 text-charcoal-500">
         Check back soon or follow us on social media to stay informed about
-        upcoming Valluvam events.
+        upcoming {settings.organizationName} events.
       </p>
     </div>
   );
@@ -234,6 +236,7 @@ function EventsErrorState({ onRetry }) {
 // ---------------------------------------------------------------------------
 
 function Events() {
+  const { settings } = useSettings();
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
@@ -266,7 +269,7 @@ function Events() {
     return (
       <ul
         className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3"
-        aria-label="Valluvam events"
+        aria-label={`${settings.organizationName} events`}
       >
         {events.map((event) => (
           <li key={event._id}>
@@ -288,7 +291,7 @@ function Events() {
               Events
             </h1>
             <p className="mt-6 text-base leading-8 text-charcoal-700 sm:text-lg">
-              This page will showcase Valluvam's community, educational, and
+              This page will showcase {settings.organizationName}'s community, educational, and
               social initiatives and events. Follow our activities and find out
               how you can get involved.
             </p>
@@ -310,7 +313,7 @@ function Events() {
             All Events
           </h2>
           <p className="mt-4 text-base leading-8 text-charcoal-700 sm:text-lg">
-            Community, educational, and social initiatives organised by Valluvam.
+            Community, educational, and social initiatives organised by {settings.organizationName}.
           </p>
 
           <div className="mt-10">{renderContent()}</div>

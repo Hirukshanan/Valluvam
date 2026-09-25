@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react';
 import { submitVolunteer } from '../services/volunteerService';
 import Turnstile from '../components/Turnstile';
+import { useSettings } from '../context/SettingsContext';
 
 const VOLUNTEER_AREAS = [
   'Teaching & Educational Support',
@@ -52,6 +53,7 @@ const initialForm = {
 };
 
 function Volunteer() {
+  const { settings } = useSettings();
   const [form, setForm] = useState(initialForm);
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -162,10 +164,10 @@ function Volunteer() {
           <div className="max-w-2xl">
             <div aria-hidden="true" className="mb-6 h-1 w-14 rounded-full bg-bronze-500" />
             <h1 className="text-4xl font-bold tracking-tight text-charcoal-950 sm:text-5xl">
-              Volunteer With Valluvam
+              Volunteer With {settings.organizationName}
             </h1>
             <p className="mt-6 text-base leading-8 text-charcoal-700 sm:text-lg">
-              Valluvam is built on the commitment of people who care. Whether you have a few hours
+              {settings.organizationName} is built on the commitment of people who care. Whether you have a few hours
               a week or a specific skill to share, your time and support can make a real difference
               in the lives of our community. Join us and be part of something meaningful.
             </p>
@@ -185,7 +187,7 @@ function Volunteer() {
               Ways You Can Help
             </h2>
             <p className="mt-3 text-base leading-7 text-charcoal-700">
-              There are many ways to contribute your time, skills, and energy to Valluvam's
+              There are many ways to contribute your time, skills, and energy to {settings.organizationName}'s
               activities. Choose an area that suits you best.
             </p>
 
@@ -442,7 +444,7 @@ function Volunteer() {
                   Short Message <span aria-hidden="true">*</span>
                 </label>
                 <p id="vol-message-hint" className="mt-1 text-xs text-charcoal-500">
-                  Tell us a little about yourself and why you'd like to volunteer with Valluvam.
+                  Tell us a little about yourself and why you'd like to volunteer with {settings.organizationName}.
                 </p>
                 <textarea
                   id="vol-message"

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { NavLink } from 'react-router-dom';
+import { useSettings } from '../context/SettingsContext';
 import logo from '../assets/logo.jpg';
 
 const navigationLinks = [
@@ -14,6 +15,7 @@ const navigationLinks = [
 ];
 
 function Navbar() {
+  const { settings } = useSettings();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   return (
@@ -27,7 +29,7 @@ function Navbar() {
         >
           <img
             src={logo}
-            alt="Valluvam"
+            alt={settings.organizationName}
             width={80}
             height={80}
             className="h-20 w-20 object-contain"
