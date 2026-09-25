@@ -29,6 +29,11 @@ const eventSchema = new mongoose.Schema(
       default: '',
       trim: true,
     },
+    imagePublicId: {
+      type: String,
+      default: '',
+      trim: true,
+    },
     status: {
       type: String,
       enum: {
