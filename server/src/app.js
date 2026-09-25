@@ -63,6 +63,8 @@ app.use('/api/contacts', require('./routes/contact'));
 
 app.use('/api/settings', require('./routes/settings'));
 
+app.use('/api/support', require('./routes/support'));
+
 app.use('/api/admin', require('./routes/admin'));
 
 // ---------------------------------------------------------------------------

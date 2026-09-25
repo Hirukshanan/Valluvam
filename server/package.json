@@ -11,7 +11,8 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "seed:admin": "node src/scripts/seedAdmin.js",
     "seed:team": "node src/scripts/seedTeam.js",
-    "seed:settings": "node src/scripts/seedSettings.js"
+    "seed:settings": "node src/scripts/seedSettings.js",
+    "seed:support": "node src/scripts/seedSupport.js"
   },
   "keywords": [],
   "license": "ISC",

@@ -26,6 +26,7 @@ import AdminTeam from './pages/AdminTeam';
 import AdminVolunteers from './pages/AdminVolunteers';
 import AdminMessages from './pages/AdminMessages';
 import AdminSettings from './pages/AdminSettings';
+import AdminSupport from './pages/AdminSupport';
 
 function PublicLayout() {
   return (
@@ -73,6 +74,7 @@ function App() {
                 <Route path="volunteers" element={<AdminVolunteers />} />
                 <Route path="messages" element={<AdminMessages />} />
                 <Route path="settings" element={<AdminSettings />} />
+                <Route path="support" element={<AdminSupport />} />
               </Route>
 
               {/* Public routes — with Navbar + Footer */}
