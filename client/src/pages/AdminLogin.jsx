@@ -40,11 +40,11 @@ function AdminLogin() {
       await login(email.trim(), password);
       navigate('/admin', { replace: true });
     } catch (err) {
-      setError(
-        err.message === 'Invalid credentials'
-          ? 'Incorrect email or password.'
-          : 'Something went wrong. Please try again.'
-      );
+      if (err.message === 'Invalid credentials') {
+        setError('Incorrect email or password.');
+      } else {
+        setError(err.message || 'Something went wrong. Please try again.');
+      }
     } finally {
       setIsSubmitting(false);
     }
