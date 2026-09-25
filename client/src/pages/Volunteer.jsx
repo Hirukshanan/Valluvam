@@ -112,6 +112,17 @@ function Volunteer() {
     const fieldErrors = validate();
     if (Object.keys(fieldErrors).length > 0) {
       setErrors(fieldErrors);
+      const fieldOrder = ['name', 'email', 'message'];
+      const firstKey = fieldOrder.find((k) => fieldErrors[k]);
+      if (firstKey) {
+        const elementIdMap = {
+          name: 'vol-name',
+          email: 'vol-email',
+          message: 'vol-message',
+        };
+        const el = document.getElementById(elementIdMap[firstKey]);
+        el?.focus();
+      }
       return;
     }
 
@@ -230,6 +241,7 @@ function Volunteer() {
             {success && (
               <div
                 role="status"
+                aria-live="polite"
                 className="mt-6 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-emerald-800"
               >
                 <div className="flex items-start gap-3">
@@ -242,247 +254,257 @@ function Volunteer() {
                     <path
                       fillRule="evenodd"
                       d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                  <div>
-                    <p className="text-sm font-semibold">{t('volunteer.successTitle')}</p>
-                    <p className="mt-1 text-sm text-emerald-700">
-                      {t('volunteer.successDesc')}
-                    </p>
-                  </div>
+                    clipRule="evenodd"
+                  />
+                </svg>
+                <div>
+                  <p className="text-sm font-semibold">{t('volunteer.successTitle')}</p>
+                  <p className="mt-1 text-sm text-emerald-700">
+                    {t('volunteer.successDesc')}
+                  </p>
                 </div>
               </div>
-            )}
+            </div>
+          )}
 
-            {/* Error message banner */}
-            {serverError && (
-              <div
-                role="alert"
-                className="mt-6 rounded-xl border border-red-200 bg-red-50 p-4 text-red-800"
-              >
-                <div className="flex items-start gap-3">
-                  <svg
-                    className="h-5 w-5 shrink-0 text-red-600 mt-0.5"
-                    viewBox="0 0 20 20"
-                    fill="currentColor"
-                    aria-hidden="true"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 7.22z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium">{serverError}</p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setServerError('')}
-                    className="ml-auto text-xs font-semibold text-red-700 hover:underline"
-                  >
-                    {t('common.dismiss')}
-                  </button>
-                </div>
-              </div>
-            )}
-
-            <form
-              onSubmit={handleSubmit}
-              aria-labelledby="volunteer-form-title"
-              aria-describedby="volunteer-form-note"
-              className="mt-6 space-y-5"
-              noValidate
+          {/* Error message banner */}
+          {serverError && (
+            <div
+              role="alert"
+              aria-live="assertive"
+              className="mt-6 rounded-xl border border-red-200 bg-red-50 p-4 text-red-800"
             >
-              {/* Full Name */}
-              <div>
-                <label
-                  htmlFor="vol-name"
-                  className="block text-sm font-semibold text-charcoal-950"
+              <div className="flex items-start gap-3">
+                <svg
+                  className="h-5 w-5 shrink-0 text-red-600 mt-0.5"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                  aria-hidden="true"
                 >
-                  {t('volunteer.nameLabel')} <span aria-hidden="true">*</span>
-                </label>
-                <input
-                  id="vol-name"
-                  name="name"
-                  type="text"
-                  autoComplete="name"
-                  required
-                  value={form.name}
-                  onChange={handleChange}
-                  disabled={isSubmitting}
-                  className={`${fieldClassName} ${
-                    errors.name ? 'border-red-500 focus-visible:border-red-500 focus-visible:outline-red-600' : ''
-                  }`}
-                />
-                {errors.name && (
-                  <p className="mt-1 text-xs text-red-600">{errors.name}</p>
-                )}
+                  <path
+                    fillRule="evenodd"
+                    d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 7.22z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-medium">{serverError}</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setServerError('')}
+                  className="ml-auto text-xs font-semibold text-red-700 hover:underline rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600"
+                >
+                  {t('common.dismiss')}
+                </button>
               </div>
+            </div>
+          )}
 
-              {/* Email Address */}
-              <div>
-                <label
-                  htmlFor="vol-email"
-                  className="block text-sm font-semibold text-charcoal-950"
-                >
-                  {t('volunteer.emailLabel')} <span aria-hidden="true">*</span>
-                </label>
-                <input
-                  id="vol-email"
-                  name="email"
-                  type="email"
-                  autoComplete="email"
-                  required
-                  value={form.email}
-                  onChange={handleChange}
-                  disabled={isSubmitting}
-                  className={`${fieldClassName} ${
-                    errors.email ? 'border-red-500 focus-visible:border-red-500 focus-visible:outline-red-600' : ''
-                  }`}
-                />
-                {errors.email && (
-                  <p className="mt-1 text-xs text-red-600">{errors.email}</p>
-                )}
-              </div>
-
-              {/* Phone Number */}
-              <div>
-                <label
-                  htmlFor="vol-phone"
-                  className="block text-sm font-semibold text-charcoal-950"
-                >
-                  {t('volunteer.phoneLabel')}
-                </label>
-                <input
-                  id="vol-phone"
-                  name="phone"
-                  type="tel"
-                  autoComplete="tel"
-                  value={form.phone}
-                  onChange={handleChange}
-                  disabled={isSubmitting}
-                  className={fieldClassName}
-                />
-              </div>
-
-              {/* Area / Location */}
-              <div>
-                <label
-                  htmlFor="vol-location"
-                  className="block text-sm font-semibold text-charcoal-950"
-                >
-                  {t('volunteer.locationLabel')}
-                </label>
-                <input
-                  id="vol-location"
-                  name="location"
-                  type="text"
-                  autoComplete="address-level2"
-                  value={form.location}
-                  onChange={handleChange}
-                  disabled={isSubmitting}
-                  className={fieldClassName}
-                />
-              </div>
-
-              {/* Preferred Area of Volunteering */}
-              <div>
-                <label
-                  htmlFor="vol-area"
-                  className="block text-sm font-semibold text-charcoal-950"
-                >
-                  {t('volunteer.areaLabel')}
-                </label>
-                <select
-                  id="vol-area"
-                  name="volunteerArea"
-                  value={form.volunteerArea}
-                  onChange={handleChange}
-                  disabled={isSubmitting}
-                  className={selectClassName}
-                >
-                  <option value="">
-                    {t('volunteer.selectArea')}
-                  </option>
-                  {VOLUNTEER_AREAS.map((area) => (
-                    <option key={area.value} value={area.value}>
-                      {t(area.labelKey)}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Availability */}
-              <div>
-                <label
-                  htmlFor="vol-availability"
-                  className="block text-sm font-semibold text-charcoal-950"
-                >
-                  {t('volunteer.availabilityLabel')}
-                </label>
-                <select
-                  id="vol-availability"
-                  name="availability"
-                  value={form.availability}
-                  onChange={handleChange}
-                  disabled={isSubmitting}
-                  className={selectClassName}
-                >
-                  <option value="">
-                    {t('volunteer.selectAvailability')}
-                  </option>
-                  {AVAILABILITY_OPTIONS.map((opt) => (
-                    <option key={opt.value} value={opt.value}>
-                      {t(opt.labelKey)}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Short Message */}
-              <div>
-                <label
-                  htmlFor="vol-message"
-                  className="block text-sm font-semibold text-charcoal-950"
-                >
-                  {t('volunteer.messageLabel')} <span aria-hidden="true">*</span>
-                </label>
-                <p id="vol-message-hint" className="mt-1 text-xs text-charcoal-500">
-                  {t('volunteer.messageHint', { org: settings.organizationName })}
-                </p>
-                <textarea
-                  id="vol-message"
-                  name="message"
-                  rows={4}
-                  required
-                  value={form.message}
-                  onChange={handleChange}
-                  disabled={isSubmitting}
-                  aria-describedby="vol-message-hint"
-                  className={`${fieldClassName} resize-y ${
-                    errors.message ? 'border-red-500 focus-visible:border-red-500 focus-visible:outline-red-600' : ''
-                  }`}
-                />
-                {errors.message && (
-                  <p className="mt-1 text-xs text-red-600">{errors.message}</p>
-                )}
-              </div>
-
-              {/* Cloudflare Turnstile Invisible Verification */}
-              <Turnstile
-                ref={turnstileRef}
-                siteKey={import.meta.env.VITE_TURNSTILE_SITE_KEY}
-                action="volunteer_form"
-              />
-
-              {/* Submit */}
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-md border border-bronze-700 bg-bronze-700 px-6 py-3 text-sm font-semibold text-white transition-colors hover:border-bronze-800 hover:bg-bronze-800 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-bronze-600 disabled:opacity-60 disabled:cursor-not-allowed sm:w-auto"
+          <form
+            onSubmit={handleSubmit}
+            aria-labelledby="volunteer-form-title"
+            aria-describedby="volunteer-form-note"
+            className="mt-6 space-y-5"
+            noValidate
+          >
+            {/* Full Name */}
+            <div>
+              <label
+                htmlFor="vol-name"
+                className="block text-sm font-semibold text-charcoal-950"
               >
+                {t('volunteer.nameLabel')} <span aria-hidden="true" className="text-red-500">*</span>
+              </label>
+              <input
+                id="vol-name"
+                name="name"
+                type="text"
+                autoComplete="name"
+                required
+                aria-required="true"
+                aria-invalid={Boolean(errors.name)}
+                aria-describedby={errors.name ? 'vol-name-error' : undefined}
+                value={form.name}
+                onChange={handleChange}
+                disabled={isSubmitting}
+                className={`${fieldClassName} ${
+                  errors.name ? 'border-red-500 focus-visible:border-red-500 focus-visible:outline-red-600' : ''
+                }`}
+              />
+              {errors.name && (
+                <p id="vol-name-error" role="alert" className="mt-1 text-xs text-red-600 font-medium">{errors.name}</p>
+              )}
+            </div>
+
+            {/* Email Address */}
+            <div>
+              <label
+                htmlFor="vol-email"
+                className="block text-sm font-semibold text-charcoal-950"
+              >
+                {t('volunteer.emailLabel')} <span aria-hidden="true" className="text-red-500">*</span>
+              </label>
+              <input
+                id="vol-email"
+                name="email"
+                type="email"
+                autoComplete="email"
+                required
+                aria-required="true"
+                aria-invalid={Boolean(errors.email)}
+                aria-describedby={errors.email ? 'vol-email-error' : undefined}
+                value={form.email}
+                onChange={handleChange}
+                disabled={isSubmitting}
+                className={`${fieldClassName} ${
+                  errors.email ? 'border-red-500 focus-visible:border-red-500 focus-visible:outline-red-600' : ''
+                }`}
+              />
+              {errors.email && (
+                <p id="vol-email-error" role="alert" className="mt-1 text-xs text-red-600 font-medium">{errors.email}</p>
+              )}
+            </div>
+
+            {/* Phone Number */}
+            <div>
+              <label
+                htmlFor="vol-phone"
+                className="block text-sm font-semibold text-charcoal-950"
+              >
+                {t('volunteer.phoneLabel')}
+              </label>
+              <input
+                id="vol-phone"
+                name="phone"
+                type="tel"
+                autoComplete="tel"
+                value={form.phone}
+                onChange={handleChange}
+                disabled={isSubmitting}
+                className={fieldClassName}
+              />
+            </div>
+
+            {/* Area / Location */}
+            <div>
+              <label
+                htmlFor="vol-location"
+                className="block text-sm font-semibold text-charcoal-950"
+              >
+                {t('volunteer.locationLabel')}
+              </label>
+              <input
+                id="vol-location"
+                name="location"
+                type="text"
+                autoComplete="address-level2"
+                value={form.location}
+                onChange={handleChange}
+                disabled={isSubmitting}
+                className={fieldClassName}
+              />
+            </div>
+
+            {/* Preferred Area of Volunteering */}
+            <div>
+              <label
+                htmlFor="vol-area"
+                className="block text-sm font-semibold text-charcoal-950"
+              >
+                {t('volunteer.areaLabel')}
+              </label>
+              <select
+                id="vol-area"
+                name="volunteerArea"
+                value={form.volunteerArea}
+                onChange={handleChange}
+                disabled={isSubmitting}
+                className={selectClassName}
+              >
+                <option value="">
+                  {t('volunteer.selectArea')}
+                </option>
+                {VOLUNTEER_AREAS.map((area) => (
+                  <option key={area.value} value={area.value}>
+                    {t(area.labelKey)}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Availability */}
+            <div>
+              <label
+                htmlFor="vol-availability"
+                className="block text-sm font-semibold text-charcoal-950"
+              >
+                {t('volunteer.availabilityLabel')}
+              </label>
+              <select
+                id="vol-availability"
+                name="availability"
+                value={form.availability}
+                onChange={handleChange}
+                disabled={isSubmitting}
+                className={selectClassName}
+              >
+                <option value="">
+                  {t('volunteer.selectAvailability')}
+                </option>
+                {AVAILABILITY_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {t(opt.labelKey)}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Short Message */}
+            <div>
+              <label
+                htmlFor="vol-message"
+                className="block text-sm font-semibold text-charcoal-950"
+              >
+                {t('volunteer.messageLabel')} <span aria-hidden="true" className="text-red-500">*</span>
+              </label>
+              <p id="vol-message-hint" className="mt-1 text-xs text-charcoal-500">
+                {t('volunteer.messageHint', { org: settings.organizationName })}
+              </p>
+              <textarea
+                id="vol-message"
+                name="message"
+                rows={4}
+                required
+                aria-required="true"
+                aria-invalid={Boolean(errors.message)}
+                aria-describedby={errors.message ? 'vol-message-hint vol-message-error' : 'vol-message-hint'}
+                value={form.message}
+                onChange={handleChange}
+                disabled={isSubmitting}
+                className={`${fieldClassName} resize-y ${
+                  errors.message ? 'border-red-500 focus-visible:border-red-500 focus-visible:outline-red-600' : ''
+                }`}
+              />
+              {errors.message && (
+                <p id="vol-message-error" role="alert" className="mt-1 text-xs text-red-600 font-medium">{errors.message}</p>
+              )}
+            </div>
+
+            {/* Cloudflare Turnstile Invisible Verification */}
+            <Turnstile
+              ref={turnstileRef}
+              siteKey={import.meta.env.VITE_TURNSTILE_SITE_KEY}
+              action="volunteer_form"
+            />
+
+            {/* Submit */}
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              aria-busy={isSubmitting}
+              className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-md border border-bronze-700 bg-bronze-700 px-6 py-3 text-sm font-semibold text-white transition-colors hover:border-bronze-800 hover:bg-bronze-800 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-bronze-600 disabled:opacity-60 disabled:cursor-not-allowed sm:w-auto"
+            >
                 {isSubmitting ? (
                   <>
                     <svg className="h-4 w-4 animate-spin text-white" viewBox="0 0 24 24" fill="none">

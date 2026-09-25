@@ -61,9 +61,38 @@ function Contact() {
     return errs;
   }
 
+  function handleNumberKeyDown(event) {
+    if (
+      [
+        'Backspace',
+        'Delete',
+        'Tab',
+        'Escape',
+        'Enter',
+        'ArrowLeft',
+        'ArrowRight',
+        'ArrowUp',
+        'ArrowDown',
+        'Home',
+        'End',
+      ].includes(event.key) ||
+      event.ctrlKey ||
+      event.metaKey
+    ) {
+      return;
+    }
+    if (!/^[0-9]$/.test(event.key)) {
+      event.preventDefault();
+    }
+  }
+
   function handleChange(event) {
     const { name, value } = event.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
+    const finalValue =
+      name === 'whatsappNumber' || name === 'phoneNumber'
+        ? value.replace(/\D/g, '')
+        : value;
+    setForm((prev) => ({ ...prev, [name]: finalValue }));
     if (errors[name]) {
       setErrors((prev) => ({ ...prev, [name]: undefined }));
     }
@@ -105,6 +134,27 @@ function Contact() {
     const fieldErrors = validate();
     if (Object.keys(fieldErrors).length > 0) {
       setErrors(fieldErrors);
+      const fieldOrder = [
+        'name',
+        'email',
+        'whatsappNumber',
+        'phoneNumber',
+        'subject',
+        'message',
+      ];
+      const firstKey = fieldOrder.find((k) => fieldErrors[k]);
+      if (firstKey) {
+        const elementIdMap = {
+          name: 'contact-name',
+          email: 'contact-email',
+          whatsappNumber: 'contact-whatsapp-number',
+          phoneNumber: 'contact-phone-number',
+          subject: 'contact-subject',
+          message: 'contact-message',
+        };
+        const el = document.getElementById(elementIdMap[firstKey]);
+        el?.focus();
+      }
       return;
     }
 
@@ -225,6 +275,7 @@ function Contact() {
           {success && (
             <div
               role="status"
+              aria-live="polite"
               className="mt-6 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-emerald-800"
             >
               <div className="flex items-start gap-3">
@@ -254,6 +305,7 @@ function Contact() {
           {serverError && (
             <div
               role="alert"
+              aria-live="assertive"
               className="mt-6 rounded-xl border border-red-200 bg-red-50 p-4 text-red-800"
             >
               <div className="flex items-start gap-3">
@@ -275,7 +327,7 @@ function Contact() {
                 <button
                   type="button"
                   onClick={() => setServerError('')}
-                  className="ml-auto text-xs font-semibold text-red-700 hover:underline"
+                  className="ml-auto text-xs font-semibold text-red-700 hover:underline rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600"
                 >
                   {t('common.dismiss')}
                 </button>
@@ -286,13 +338,13 @@ function Contact() {
           <form
             onSubmit={handleSubmit}
             aria-labelledby="contact-form-title"
-            aria-describedby="contact-form-notice contact-form-required"
+            aria-describedby="contact-form-required"
             className="mt-6 space-y-5"
             noValidate
           >
             <div>
               <label htmlFor="contact-name" className="block text-sm font-semibold text-charcoal-950">
-                {t('contact.nameLabel')}
+                {t('contact.nameLabel')} <span aria-hidden="true" className="text-red-500">*</span>
               </label>
               <input
                 id="contact-name"
@@ -300,6 +352,9 @@ function Contact() {
                 type="text"
                 autoComplete="name"
                 required
+                aria-required="true"
+                aria-invalid={Boolean(errors.name)}
+                aria-describedby={errors.name ? 'contact-name-error' : undefined}
                 value={form.name}
                 onChange={handleChange}
                 disabled={isSubmitting}
@@ -308,13 +363,13 @@ function Contact() {
                 }`}
               />
               {errors.name && (
-                <p className="mt-1.5 text-xs text-red-600 font-medium">{errors.name}</p>
+                <p id="contact-name-error" role="alert" className="mt-1.5 text-xs text-red-600 font-medium">{errors.name}</p>
               )}
             </div>
 
             <div>
               <label htmlFor="contact-email" className="block text-sm font-semibold text-charcoal-950">
-                {t('contact.emailInputLabel')}
+                {t('contact.emailInputLabel')} <span aria-hidden="true" className="text-red-500">*</span>
               </label>
               <input
                 id="contact-email"
@@ -322,6 +377,9 @@ function Contact() {
                 type="email"
                 autoComplete="email"
                 required
+                aria-required="true"
+                aria-invalid={Boolean(errors.email)}
+                aria-describedby={errors.email ? 'contact-email-error' : undefined}
                 value={form.email}
                 onChange={handleChange}
                 disabled={isSubmitting}
@@ -330,13 +388,13 @@ function Contact() {
                 }`}
               />
               {errors.email && (
-                <p className="mt-1.5 text-xs text-red-600 font-medium">{errors.email}</p>
+                <p id="contact-email-error" role="alert" className="mt-1.5 text-xs text-red-600 font-medium">{errors.email}</p>
               )}
             </div>
 
             <fieldset className="w-full min-w-0 rounded-xl border border-bronze-100 bg-bronze-50 p-6 pt-6 sm:p-5 sm:pt-7">
               <legend className="float-left w-full mb-2 px-2 text-base font-semibold text-charcoal-950">
-                {t('contact.reachMethodLegend')}
+                {t('contact.reachMethodLegend')} <span aria-hidden="true" className="text-red-500">*</span>
               </legend>
               <div className="flex w-full flex-wrap gap-x-6 gap-y-2">
                 {[
@@ -346,9 +404,11 @@ function Contact() {
                 ].map(({ value, label }) => (
                   <label
                     key={value}
+                    htmlFor={`contact-method-${value}`}
                     className="inline-flex min-h-11 cursor-pointer items-center gap-2 text-sm font-medium text-charcoal-950"
                   >
                     <input
+                      id={`contact-method-${value}`}
                       type="radio"
                       name="preferredContactMethod"
                       value={value}
@@ -356,6 +416,7 @@ function Contact() {
                       onChange={() => handleMethodChange(value)}
                       disabled={isSubmitting}
                       required
+                      aria-required="true"
                       className="h-4 w-4 accent-bronze-700 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-bronze-600"
                     />
                     {label}
@@ -373,21 +434,38 @@ function Contact() {
                     htmlFor={`contact-${form.preferredContactMethod}-number`}
                     className="block text-sm font-semibold text-charcoal-950"
                   >
-                    {form.preferredContactMethod === 'whatsapp' ? t('contact.whatsappNumberLabel') : t('contact.phoneNumberLabel')}
+                    {form.preferredContactMethod === 'whatsapp' ? t('contact.whatsappNumberLabel') : t('contact.phoneNumberLabel')}{' '}
+                    <span aria-hidden="true" className="text-red-500">*</span>
                   </label>
                   <input
                     key={form.preferredContactMethod}
                     id={`contact-${form.preferredContactMethod}-number`}
                     name={form.preferredContactMethod === 'whatsapp' ? 'whatsappNumber' : 'phoneNumber'}
                     type="tel"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
                     autoComplete="tel"
                     required
+                    aria-required="true"
+                    aria-invalid={Boolean(
+                      form.preferredContactMethod === 'whatsapp'
+                        ? errors.whatsappNumber
+                        : errors.phoneNumber
+                    )}
+                    aria-describedby={
+                      form.preferredContactMethod === 'whatsapp' && errors.whatsappNumber
+                        ? 'contact-whatsapp-error'
+                        : form.preferredContactMethod === 'phone' && errors.phoneNumber
+                          ? 'contact-phone-error'
+                          : undefined
+                    }
                     value={
                       form.preferredContactMethod === 'whatsapp'
                         ? form.whatsappNumber
                         : form.phoneNumber
                     }
                     onChange={handleChange}
+                    onKeyDown={handleNumberKeyDown}
                     disabled={isSubmitting}
                     className={`${fieldClassName} ${
                       (form.preferredContactMethod === 'whatsapp' && errors.whatsappNumber) ||
@@ -397,10 +475,10 @@ function Contact() {
                     }`}
                   />
                   {form.preferredContactMethod === 'whatsapp' && errors.whatsappNumber && (
-                    <p className="mt-1.5 text-xs text-red-600 font-medium">{errors.whatsappNumber}</p>
+                    <p id="contact-whatsapp-error" role="alert" className="mt-1.5 text-xs text-red-600 font-medium">{errors.whatsappNumber}</p>
                   )}
                   {form.preferredContactMethod === 'phone' && errors.phoneNumber && (
-                    <p className="mt-1.5 text-xs text-red-600 font-medium">{errors.phoneNumber}</p>
+                    <p id="contact-phone-error" role="alert" className="mt-1.5 text-xs text-red-600 font-medium">{errors.phoneNumber}</p>
                   )}
                 </div>
               )}
@@ -408,13 +486,16 @@ function Contact() {
 
             <div>
               <label htmlFor="contact-subject" className="block text-sm font-semibold text-charcoal-950">
-                {t('contact.subjectLabel')}
+                {t('contact.subjectLabel')} <span aria-hidden="true" className="text-red-500">*</span>
               </label>
               <input
                 id="contact-subject"
                 name="subject"
                 type="text"
                 required
+                aria-required="true"
+                aria-invalid={Boolean(errors.subject)}
+                aria-describedby={errors.subject ? 'contact-subject-error' : undefined}
                 value={form.subject}
                 onChange={handleChange}
                 disabled={isSubmitting}
@@ -423,19 +504,22 @@ function Contact() {
                 }`}
               />
               {errors.subject && (
-                <p className="mt-1.5 text-xs text-red-600 font-medium">{errors.subject}</p>
+                <p id="contact-subject-error" role="alert" className="mt-1.5 text-xs text-red-600 font-medium">{errors.subject}</p>
               )}
             </div>
 
             <div>
               <label htmlFor="contact-message" className="block text-sm font-semibold text-charcoal-950">
-                {t('contact.messageLabel')}
+                {t('contact.messageLabel')} <span aria-hidden="true" className="text-red-500">*</span>
               </label>
               <textarea
                 id="contact-message"
                 name="message"
                 rows={5}
                 required
+                aria-required="true"
+                aria-invalid={Boolean(errors.message)}
+                aria-describedby={errors.message ? 'contact-message-error' : undefined}
                 value={form.message}
                 onChange={handleChange}
                 disabled={isSubmitting}
@@ -444,7 +528,7 @@ function Contact() {
                 }`}
               />
               {errors.message && (
-                <p className="mt-1.5 text-xs text-red-600 font-medium">{errors.message}</p>
+                <p id="contact-message-error" role="alert" className="mt-1.5 text-xs text-red-600 font-medium">{errors.message}</p>
               )}
             </div>
 
@@ -457,6 +541,7 @@ function Contact() {
             <button
               type="submit"
               disabled={isSubmitting}
+              aria-busy={isSubmitting}
               className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-md border border-bronze-700 bg-bronze-700 px-6 py-3 text-sm font-semibold text-white transition-colors hover:border-bronze-800 hover:bg-bronze-800 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-bronze-600 disabled:opacity-60 disabled:cursor-not-allowed sm:w-auto"
             >
               {isSubmitting ? (
