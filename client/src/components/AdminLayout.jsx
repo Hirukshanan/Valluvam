@@ -177,14 +177,14 @@ function AdminLayout() {
       </aside>
 
       {/* ── Main area ── */}
-      <div className="flex flex-1 flex-col">
+      <div className="flex flex-1 flex-col min-w-0">
         {/* Top bar */}
         <header className="sticky top-0 z-30 flex items-center gap-4 border-b border-bronze-100 bg-white px-4 py-3 sm:px-6">
           {/* Hamburger (mobile only) */}
           <button
             type="button"
             onClick={() => setIsSidebarOpen(true)}
-            className="flex h-9 w-9 items-center justify-center rounded-md border border-bronze-200 text-charcoal-700 hover:bg-bronze-50 lg:hidden"
+            className="flex h-10 w-10 items-center justify-center rounded-md border border-bronze-200 text-charcoal-700 hover:bg-bronze-50 lg:hidden"
             aria-label="Open sidebar"
           >
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className="h-5 w-5">
@@ -198,7 +198,7 @@ function AdminLayout() {
         </header>
 
         {/* Page content */}
-        <main className="flex-1 p-4 sm:p-6">
+        <main className="flex-1 p-4 sm:p-6 min-w-0">
           <Outlet />
         </main>
       </div>

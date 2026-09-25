@@ -5,7 +5,7 @@ import { useSettings } from '../context/SettingsContext';
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const fieldClassName =
-  'mt-2 block w-full rounded-md border border-charcoal-300 bg-white px-4 py-3 text-base text-charcoal-950 transition-colors focus-visible:border-bronze-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-bronze-600 disabled:opacity-60 disabled:cursor-not-allowed';
+  'mt-2 block w-full rounded-md border border-charcoal-300 bg-white px-3.5 py-2.5 text-sm sm:text-base text-charcoal-950 transition-colors focus-visible:border-bronze-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-bronze-600 disabled:opacity-60 disabled:cursor-not-allowed';
 
 const initialSettingsState = {
   organizationName: '',
@@ -211,10 +211,10 @@ function AdminSettings() {
   return (
     <div className="flex-1 pb-16">
       {/* ── Page Header ── */}
-      <header className="border-b border-bronze-100 bg-white px-6 py-6 sm:px-8">
+      <div className="rounded-xl border border-bronze-100 bg-white p-4 sm:p-6 shadow-xs">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="text-2xl font-bold tracking-tight text-charcoal-950">Settings</h1>
+            <h2 className="text-xl font-bold tracking-tight text-charcoal-950 sm:text-2xl">Settings</h2>
             <p className="mt-1 text-sm text-charcoal-600">
               Manage organization details, contact information, and social links.
             </p>
@@ -229,10 +229,10 @@ function AdminSettings() {
             </p>
           )}
         </div>
-      </header>
+      </div>
 
       {/* ── Main Content ── */}
-      <div className="mx-auto max-w-4xl px-6 py-8 sm:px-8">
+      <div className="mx-auto max-w-4xl py-6">
         {/* Error Alert */}
         {serverError && (
           <div
@@ -280,7 +280,7 @@ function AdminSettings() {
         ) : (
           <form onSubmit={handleSubmit} noValidate className="space-y-8">
             {/* General Info Card */}
-            <div className="rounded-xl border border-bronze-100 bg-white p-6 shadow-xs sm:p-8">
+            <div className="rounded-xl border border-bronze-100 bg-white p-4 sm:p-6 shadow-xs">
               <h2 className="text-lg font-semibold text-charcoal-950">Organization Profile</h2>
               <p className="mt-1 text-sm text-charcoal-600">
                 Basic identity and branding information for Valluvam.
@@ -354,7 +354,7 @@ function AdminSettings() {
             </div>
 
             {/* Contact & Location Card */}
-            <div className="rounded-xl border border-bronze-100 bg-white p-6 shadow-xs sm:p-8">
+            <div className="rounded-xl border border-bronze-100 bg-white p-4 sm:p-6 shadow-xs">
               <h2 className="text-lg font-semibold text-charcoal-950">Contact & Location</h2>
               <p className="mt-1 text-sm text-charcoal-600">
                 Official contact channel and headquarters address.
@@ -408,7 +408,7 @@ function AdminSettings() {
             </div>
 
             {/* Social Media Links Card */}
-            <div className="rounded-xl border border-bronze-100 bg-white p-6 shadow-xs sm:p-8">
+            <div className="rounded-xl border border-bronze-100 bg-white p-4 sm:p-6 shadow-xs">
               <h2 className="text-lg font-semibold text-charcoal-950">Social Media Links</h2>
               <p className="mt-1 text-sm text-charcoal-600">
                 Official public social profiles linked in the website footer.
