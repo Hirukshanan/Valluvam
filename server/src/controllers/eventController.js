@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const Event = require('../models/Event');
+const { uploadStream, deleteCloudinaryAsset } = require('../config/cloudinary');
 
 // ---------------------------------------------------------------------------
 // Helper — check if a string is a valid MongoDB ObjectId
@@ -7,6 +8,38 @@ const Event = require('../models/Event');
 function isValidId(id) {
   return mongoose.Types.ObjectId.isValid(id);
 }
+
+// ---------------------------------------------------------------------------
+// POST /api/events/upload — Upload an event image to Cloudinary (admin only)
+// ---------------------------------------------------------------------------
+exports.uploadEventImage = async (req, res) => {
+  try {
+    const file = req.file || (req.files && req.files[0]);
+
+    if (!file) {
+      return res.status(400).json({
+        success: false,
+        message: 'No image file provided for upload',
+      });
+    }
+
+    const result = await uploadStream(file.buffer, { folder: 'valluvam/events' });
+
+    res.status(200).json({
+      success: true,
+      data: {
+        url: result.secure_url,
+        publicId: result.public_id,
+      },
+    });
+  } catch (error) {
+    console.error('Event image upload error:', error);
+    res.status(500).json({
+      success: false,
+      message: error.message || 'Server error while uploading image to Cloudinary',
+    });
+  }
+};
 
 // ---------------------------------------------------------------------------
 // GET /api/events — List all events
@@ -103,17 +136,34 @@ exports.updateEvent = async (req, res) => {
       });
     }
 
-    const event = await Event.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,            // return the updated document
-      runValidators: true,  // apply schema validators on update
-    });
-
-    if (!event) {
+    const existingEvent = await Event.findById(req.params.id);
+    if (!existingEvent) {
       return res.status(404).json({
         success: false,
         message: 'Event not found',
       });
     }
+
+    // If image is changed or removed, clean up old Cloudinary asset
+    if (
+      req.body.imagePublicId !== undefined &&
+      existingEvent.imagePublicId &&
+      existingEvent.imagePublicId !== req.body.imagePublicId
+    ) {
+      deleteCloudinaryAsset(existingEvent.imagePublicId);
+    } else if (
+      req.body.image !== undefined &&
+      existingEvent.imagePublicId &&
+      existingEvent.image !== req.body.image &&
+      req.body.imagePublicId === undefined
+    ) {
+      deleteCloudinaryAsset(existingEvent.imagePublicId);
+    }
+
+    const event = await Event.findByIdAndUpdate(req.params.id, req.body, {
+      new: true,            // return the updated document
+      runValidators: true,  // apply schema validators on update
+    });
 
     res.status(200).json({
       success: true,
@@ -156,6 +206,11 @@ exports.deleteEvent = async (req, res) => {
         success: false,
         message: 'Event not found',
       });
+    }
+
+    // Clean up associated Cloudinary image if present
+    if (event.imagePublicId) {
+      deleteCloudinaryAsset(event.imagePublicId);
     }
 
     res.status(200).json({

@@ -4,6 +4,7 @@ import {
   createEvent,
   updateEvent,
   deleteEvent,
+  uploadEventImage,
 } from '../services/adminEventService';
 
 // ---------------------------------------------------------------------------
@@ -16,12 +17,15 @@ const emptyForm = {
   date: '',
   location: '',
   image: '',
+  imagePublicId: '',
   status: 'draft',
 };
 
 function EventForm({ initial, onSubmit, onCancel, isSubmitting }) {
   const [form, setForm] = useState(initial || emptyForm);
   const [errors, setErrors] = useState({});
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [uploadError, setUploadError] = useState('');
   const [previewError, setPreviewError] = useState(false);
 
   useEffect(() => {
@@ -32,12 +36,14 @@ function EventForm({ initial, onSubmit, onCancel, isSubmitting }) {
         date: initial.date ? initial.date.slice(0, 10) : '',
         location: initial.location || '',
         image: initial.image || '',
+        imagePublicId: initial.imagePublicId || '',
         status: initial.status || 'draft',
       });
     } else {
       setForm(emptyForm);
     }
     setErrors({});
+    setUploadError('');
     setPreviewError(false);
   }, [initial]);
 
@@ -57,26 +63,72 @@ function EventForm({ initial, onSubmit, onCancel, isSubmitting }) {
     if (errors[name]) {
       setErrors((prev) => ({ ...prev, [name]: undefined }));
     }
-    if (name === 'image') {
-      setPreviewError(false);
+  }
+
+  async function handleFileSelect(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type || !file.type.startsWith('image/')) {
+      setUploadError('Invalid file type. Please select an image (JPEG, PNG, WebP, GIF, AVIF).');
+      return;
     }
+
+    if (file.size > 10 * 1024 * 1024) {
+      setUploadError('Image file is too large. Maximum size is 10 MB.');
+      return;
+    }
+
+    setUploadError('');
+    setIsUploadingImage(true);
+    try {
+      const result = await uploadEventImage(file);
+      if (result && result.url) {
+        setForm((prev) => ({
+          ...prev,
+          image: result.url,
+          imagePublicId: result.publicId || '',
+        }));
+        setPreviewError(false);
+      }
+    } catch (err) {
+      setUploadError(err.message || 'Failed to upload image to Cloudinary');
+    } finally {
+      setIsUploadingImage(false);
+      e.target.value = '';
+    }
+  }
+
+  function handleRemoveImage() {
+    setForm((prev) => ({
+      ...prev,
+      image: '',
+      imagePublicId: '',
+    }));
+    setPreviewError(false);
+    setUploadError('');
   }
 
   function handleSubmit(e) {
     e.preventDefault();
+    if (isUploadingImage) return;
     const v = validate();
     if (Object.keys(v).length > 0) {
       setErrors(v);
       return;
     }
-    onSubmit(form);
+    onSubmit({
+      ...form,
+      title: form.title.trim(),
+      description: form.description.trim(),
+      location: form.location.trim(),
+      image: form.image.trim(),
+      imagePublicId: form.imagePublicId?.trim() || '',
+    });
   }
 
   const inputClass =
     'mt-1 block w-full rounded-lg border border-charcoal-200 bg-white px-3 py-2 text-sm text-charcoal-950 placeholder:text-charcoal-400 transition-colors focus:border-bronze-400 focus:ring-2 focus:ring-bronze-200 focus:outline-none disabled:opacity-60';
-
-  const trimmedImage = form.image?.trim() || '';
-  const isLocalPath = /^[a-zA-Z]:[/\\]|^file:\/\//i.test(trimmedImage);
 
   return (
     <form onSubmit={handleSubmit} noValidate className="space-y-4">
@@ -91,7 +143,7 @@ function EventForm({ initial, onSubmit, onCancel, isSubmitting }) {
           type="text"
           value={form.title}
           onChange={handleChange}
-          disabled={isSubmitting}
+          disabled={isSubmitting || isUploadingImage}
           placeholder="Event title"
           className={inputClass}
         />
@@ -109,7 +161,7 @@ function EventForm({ initial, onSubmit, onCancel, isSubmitting }) {
           rows={4}
           value={form.description}
           onChange={handleChange}
-          disabled={isSubmitting}
+          disabled={isSubmitting || isUploadingImage}
           placeholder="Event description"
           className={inputClass}
         />
@@ -130,7 +182,7 @@ function EventForm({ initial, onSubmit, onCancel, isSubmitting }) {
             type="date"
             value={form.date}
             onChange={handleChange}
-            disabled={isSubmitting}
+            disabled={isSubmitting || isUploadingImage}
             className={inputClass}
           />
           {errors.date && <p className="mt-1 text-xs text-red-600">{errors.date}</p>}
@@ -146,7 +198,7 @@ function EventForm({ initial, onSubmit, onCancel, isSubmitting }) {
             type="text"
             value={form.location}
             onChange={handleChange}
-            disabled={isSubmitting}
+            disabled={isSubmitting || isUploadingImage}
             placeholder="Event location"
             className={inputClass}
           />
@@ -156,71 +208,156 @@ function EventForm({ initial, onSubmit, onCancel, isSubmitting }) {
         </div>
       </div>
 
-      {/* Image URL + Status row */}
-      <div className="grid gap-4 sm:grid-cols-2">
-        <div>
-          <label htmlFor="image" className="block text-sm font-medium text-charcoal-800">
-            Image URL
-          </label>
-          <input
-            id="image"
-            name="image"
-            type="url"
-            value={form.image}
-            onChange={handleChange}
-            disabled={isSubmitting}
-            placeholder="https://example.com/image.jpg"
-            className={inputClass}
-          />
+      {/* Status */}
+      <div>
+        <label htmlFor="status" className="block text-sm font-medium text-charcoal-800">
+          Status <span className="text-red-500">*</span>
+        </label>
+        <select
+          id="status"
+          name="status"
+          value={form.status}
+          onChange={handleChange}
+          disabled={isSubmitting || isUploadingImage}
+          className={inputClass}
+        >
+          <option value="draft">Draft</option>
+          <option value="published">Published</option>
+        </select>
+        {errors.status && <p className="mt-1 text-xs text-red-600">{errors.status}</p>}
+      </div>
 
-          {trimmedImage && isLocalPath && (
-            <p className="mt-2 rounded-lg border border-amber-200 bg-amber-50 p-2.5 text-xs text-amber-800">
-              Local file paths (e.g. C:\...) are not supported. Please enter a direct web image URL (http:// or https://).
-            </p>
-          )}
+      {/* Event Image (Cloudinary) */}
+      <div>
+        <label className="block text-sm font-medium text-charcoal-800">
+          Event Image
+        </label>
+        <p className="mb-2 text-xs text-charcoal-500">
+          Select an image from your computer to upload directly to Cloudinary.
+        </p>
 
-          {trimmedImage && !isLocalPath && previewError && (
-            <p className="mt-2 rounded-lg border border-red-200 bg-red-50 p-2.5 text-xs text-red-700">
-              Unable to load image preview. Please check that the URL is a valid, direct image link.
-            </p>
-          )}
-
-          {trimmedImage && !isLocalPath && !previewError && (
-            <div className="mt-2 overflow-hidden rounded-lg border border-bronze-100 bg-bronze-50/50">
+        {form.image ? (
+          <div className="rounded-lg border border-bronze-100 bg-bronze-50/40 p-3 sm:p-4">
+            <div className="relative overflow-hidden rounded-lg border border-bronze-200 bg-white">
               <img
-                src={trimmedImage}
+                src={form.image}
                 alt="Event preview"
                 onError={() => setPreviewError(true)}
-                className="h-36 w-full rounded-lg object-cover"
+                className="h-48 w-full object-cover sm:h-56"
               />
             </div>
-          )}
-        </div>
 
-        <div>
-          <label htmlFor="status" className="block text-sm font-medium text-charcoal-800">
-            Status <span className="text-red-500">*</span>
-          </label>
-          <select
-            id="status"
-            name="status"
-            value={form.status}
-            onChange={handleChange}
-            disabled={isSubmitting}
-            className={inputClass}
-          >
-            <option value="draft">Draft</option>
-            <option value="published">Published</option>
-          </select>
-          {errors.status && <p className="mt-1 text-xs text-red-600">{errors.status}</p>}
-        </div>
+            <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <span className="inline-flex items-center gap-1 rounded bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-700 border border-emerald-200">
+                  ✓ Image Set
+                </span>
+                {previewError && (
+                  <p className="text-xs text-red-600">Failed to load preview.</p>
+                )}
+              </div>
+
+              <div className="flex items-center gap-2">
+                <label
+                  htmlFor="replaceEventImageInput"
+                  className={`inline-flex items-center gap-1.5 rounded-md border border-bronze-200 bg-white px-2.5 py-1 text-xs font-medium text-bronze-700 transition-colors hover:bg-bronze-50 cursor-pointer ${
+                    isUploadingImage || isSubmitting ? 'opacity-60 cursor-not-allowed pointer-events-none' : ''
+                  }`}
+                >
+                  <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                    <polyline points="17 8 12 3 7 8" />
+                    <line x1="12" y1="3" x2="12" y2="15" />
+                  </svg>
+                  Replace Image
+                  <input
+                    id="replaceEventImageInput"
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileSelect}
+                    disabled={isUploadingImage || isSubmitting}
+                    className="sr-only"
+                  />
+                </label>
+
+                <button
+                  type="button"
+                  onClick={handleRemoveImage}
+                  disabled={isUploadingImage || isSubmitting}
+                  className="rounded-md border border-red-200 bg-white px-2.5 py-1 text-xs font-medium text-red-600 transition-colors hover:bg-red-50 disabled:opacity-60"
+                >
+                  Remove
+                </button>
+              </div>
+            </div>
+
+            {isUploadingImage && (
+              <div className="mt-2.5 flex items-center space-x-2 text-xs text-bronze-700">
+                <div className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-bronze-600 border-t-transparent" />
+                <span>Uploading replacement image to Cloudinary...</span>
+              </div>
+            )}
+
+            {uploadError && (
+              <p className="mt-2 text-xs text-red-600">{uploadError}</p>
+            )}
+          </div>
+        ) : (
+          <div>
+            <label
+              htmlFor="eventImageUploadInput"
+              className={`flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-charcoal-200 bg-charcoal-50/50 p-6 text-center cursor-pointer transition-colors hover:border-bronze-300 hover:bg-bronze-50/30 ${
+                isUploadingImage ? 'opacity-60 cursor-not-allowed' : ''
+              }`}
+            >
+              <svg
+                className="mb-2 h-8 w-8 text-charcoal-400"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                <polyline points="17 8 12 3 7 8" />
+                <line x1="12" y1="3" x2="12" y2="15" />
+              </svg>
+              <span className="text-xs font-medium text-charcoal-700">
+                Click to browse and upload event image
+              </span>
+              <span className="mt-0.5 text-[11px] text-charcoal-500">
+                JPEG, PNG, WebP up to 10 MB
+              </span>
+              <input
+                id="eventImageUploadInput"
+                type="file"
+                accept="image/*"
+                onChange={handleFileSelect}
+                disabled={isUploadingImage || isSubmitting}
+                className="sr-only"
+              />
+            </label>
+
+            {isUploadingImage && (
+              <div className="mt-2 flex items-center space-x-2 text-xs text-bronze-700">
+                <div className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-bronze-600 border-t-transparent" />
+                <span>Uploading image to Cloudinary...</span>
+              </div>
+            )}
+
+            {uploadError && (
+              <p className="mt-1.5 text-xs text-red-600">{uploadError}</p>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Actions */}
       <div className="flex items-center gap-3 pt-2">
         <button
           type="submit"
-          disabled={isSubmitting}
+          disabled={isSubmitting || isUploadingImage}
           className="inline-flex items-center gap-2 rounded-lg bg-bronze-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-bronze-700 disabled:cursor-not-allowed disabled:opacity-60"
         >
           {isSubmitting && (
@@ -234,7 +371,7 @@ function EventForm({ initial, onSubmit, onCancel, isSubmitting }) {
         <button
           type="button"
           onClick={onCancel}
-          disabled={isSubmitting}
+          disabled={isSubmitting || isUploadingImage}
           className="rounded-lg border border-charcoal-200 px-4 py-2 text-sm font-medium text-charcoal-700 transition-colors hover:bg-charcoal-50 disabled:opacity-60"
         >
           Cancel
