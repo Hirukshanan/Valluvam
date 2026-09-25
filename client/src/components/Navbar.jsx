@@ -34,6 +34,7 @@ function Navbar() {
             alt={settings.organizationName}
             width={80}
             height={80}
+            decoding="async"
             className="h-20 w-20 object-contain"
           />
         </NavLink>

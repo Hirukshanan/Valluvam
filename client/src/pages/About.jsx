@@ -88,7 +88,8 @@ function AvatarPlaceholder() {
  */
 function LeadershipCard({ role, name, photo, bio }) {
   const { t } = useLanguage();
-  const hasPhoto = Boolean(photo && photo.trim());
+  const [imgError, setImgError] = useState(false);
+  const hasPhoto = Boolean(photo && photo.trim() && !imgError);
   const hasName = Boolean(name && name.trim());
 
   return (
@@ -97,6 +98,11 @@ function LeadershipCard({ role, name, photo, bio }) {
         <img
           src={photo}
           alt={hasName ? `${name} - ${role}` : role}
+          loading="lazy"
+          decoding="async"
+          width={96}
+          height={96}
+          onError={() => setImgError(true)}
           className="mx-auto h-24 w-24 rounded-full object-cover ring-4 ring-white"
         />
       ) : (
@@ -197,6 +203,7 @@ function About() {
               alt={t('about.imageAlt', { org: settings.organizationName })}
               width={960}
               height={640}
+              decoding="async"
               className="h-72 w-full object-cover sm:h-80 lg:h-full lg:min-h-[480px]"
             />
             {/* Subtle warm overlay */}

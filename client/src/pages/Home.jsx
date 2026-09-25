@@ -48,6 +48,7 @@ function Home() {
           width={2048}
           height={1536}
           fetchPriority="high"
+          decoding="async"
           className="absolute inset-0 -z-20 h-full w-full object-cover object-[center_60%]"
         />
         <div
