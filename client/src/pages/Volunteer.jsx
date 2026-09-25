@@ -3,6 +3,7 @@ import { submitVolunteer } from '../services/volunteerService';
 import Turnstile from '../components/Turnstile';
 import { useSettings } from '../context/SettingsContext';
 import { useLanguage } from '../context/LanguageContext';
+import SEO from '../components/SEO';
 
 const VOLUNTEER_AREAS = [
   { value: 'Teaching & Educational Support', labelKey: 'volunteer.areasList.teaching' },
@@ -163,6 +164,10 @@ function Volunteer() {
 
   return (
     <main>
+      <SEO
+        title="Volunteer With Us"
+        description={`Join ${settings.organizationName} as a volunteer. Contribute your time and skills in teaching, event coordination, professional support, and community outreach.`}
+      />
       {/* Page header */}
       <header className="bg-bronze-50 py-16 sm:py-20 lg:py-24">
         <div className="mx-auto max-w-7xl px-6">

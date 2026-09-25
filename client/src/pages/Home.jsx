@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { useSettings } from '../context/SettingsContext';
 import { useLanguage } from '../context/LanguageContext';
+import SEO from '../components/SEO';
 import backdrop from '../assets/Backdrop.jpg';
 
 const getActivityAreas = (t) => [
@@ -33,6 +34,10 @@ function Home() {
 
   return (
     <main>
+      <SEO
+        title={`${settings.organizationName} — Nonprofit Organization`}
+        description={`${settings.organizationName} is a registered nonprofit organization established in ${settings.location}, supporting students, children, low-income families, and rural communities through education, resources, and social service initiatives.`}
+      />
       <section
         aria-labelledby="hero-title"
         className="relative isolate overflow-hidden bg-charcoal-950"

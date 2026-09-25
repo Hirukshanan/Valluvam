@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { useSettings } from '../context/SettingsContext';
 import { useLanguage } from '../context/LanguageContext';
+import SEO from '../components/SEO';
 
 const getWorkAreas = (t, organizationName) => [
   {
@@ -41,6 +42,10 @@ function OurWork() {
   const workAreas = getWorkAreas(t, settings.organizationName);
   return (
     <main>
+      <SEO
+        title="Our Work"
+        description={`Explore ${settings.organizationName}'s practical initiatives including free past papers, educational resources, student assistance with bicycles, rural teaching, and disaster relief.`}
+      />
       {/* Page header */}
       <header className="bg-bronze-50 py-16 sm:py-20 lg:py-24">
         <div className="mx-auto max-w-7xl px-6">

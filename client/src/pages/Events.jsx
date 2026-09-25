@@ -11,6 +11,7 @@ import { useEffect, useState } from 'react';
 import { fetchEvents } from '../services/eventService';
 import { useSettings } from '../context/SettingsContext';
 import { useLanguage } from '../context/LanguageContext';
+import SEO from '../components/SEO';
 
 // ---------------------------------------------------------------------------
 // Subcomponents
@@ -286,6 +287,10 @@ function Events() {
 
   return (
     <main>
+      <SEO
+        title="Events"
+        description={`Stay informed on upcoming and past community events, educational workshops, and social service initiatives organised by ${settings.organizationName}.`}
+      />
       {/* Page header */}
       <header className="bg-bronze-50 py-16 sm:py-20 lg:py-24">
         <div className="mx-auto max-w-7xl px-6">
