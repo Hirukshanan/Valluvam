@@ -34,7 +34,29 @@ const volunteerRateLimiter = rateLimit({
   },
 });
 
+/**
+ * Rate limiter for admin login endpoint.
+ * Protects against brute-force attacks by limiting failed login attempts.
+ * Limits each IP address to 5 failed attempts per 15 minutes.
+ * Successful logins (status < 400) do not count against the limit.
+ */
+const authRateLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  limit: 5, // Limit each IP to 5 failed attempts per windowMs
+  skipSuccessfulRequests: true, // Only count failed attempts (4xx/5xx)
+  standardHeaders: true, // Return standard `RateLimit-*` headers
+  legacyHeaders: false, // Disable legacy `X-RateLimit-*` headers
+  handler: (req, res) => {
+    res.status(429).json({
+      success: false,
+      message: 'Too many failed login attempts from this IP. Please try again after 15 minutes.',
+    });
+  },
+});
+
 module.exports = {
   contactRateLimiter,
   volunteerRateLimiter,
+  authRateLimiter,
 };
+

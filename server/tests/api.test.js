@@ -14,6 +14,7 @@ const Team = require('../src/models/Team');
 const { Support } = require('../src/models/Support');
 const Volunteer = require('../src/models/Volunteer');
 const Contact = require('../src/models/Contact');
+const { authRateLimiter } = require('../src/middleware/rateLimiter');
 
 async function runTestSuite() {
   console.log('Connecting to database for test suite...');
@@ -62,23 +63,41 @@ async function runTestSuite() {
     assert(data.success === false, 'Expected success: false');
   });
 
-  console.log('\n--- 2. Auth Endpoints ---');
+  console.log('\n--- 2. Auth Endpoints & Rate Limiting ---');
+  await test('POST /auth/login succeeds with valid credentials (200)', async () => {
+    const res = await fetch(`${baseUrl}/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: admin.email, password: 'admin123' }),
+    });
+    const data = await res.json();
+    assert(res.status === 200, `Expected 200, got ${res.status}`);
+    assert(data.success === true, 'Expected success: true');
+    assert(typeof data.token === 'string', 'Expected token string');
+    assert(data.data.email === admin.email, 'Expected admin email match');
+  });
+
   await test('POST /auth/login fails without credentials (400)', async () => {
     const res = await fetch(`${baseUrl}/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({}),
     });
+    const data = await res.json();
     assert(res.status === 400, `Expected 400, got ${res.status}`);
+    assert(data.success === false, 'Expected success: false');
+    assert(data.message === 'Please provide email and password', 'Expected message match');
   });
 
-  await test('POST /auth/login fails with invalid email (401)', async () => {
+  await test('POST /auth/login fails with invalid email without leaking user existence (401)', async () => {
     const res = await fetch(`${baseUrl}/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email: 'nonexistent@valluvam.org', password: 'wrong' }),
     });
+    const data = await res.json();
     assert(res.status === 401, `Expected 401, got ${res.status}`);
+    assert(data.message === 'Invalid credentials', 'Expected generic error message');
   });
 
   await test('POST /auth/login fails with wrong password (401)', async () => {
@@ -87,7 +106,41 @@ async function runTestSuite() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email: admin.email, password: 'wrongpassword' }),
     });
+    const data = await res.json();
     assert(res.status === 401, `Expected 401, got ${res.status}`);
+    assert(data.message === 'Invalid credentials', 'Expected generic error message');
+  });
+
+  await test('POST /auth/login fails on 4th attempt with 401', async () => {
+    const res = await fetch(`${baseUrl}/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: admin.email, password: 'wrongpassword4' }),
+    });
+    assert(res.status === 401, `Expected 401, got ${res.status}`);
+  });
+
+  await test('POST /auth/login fails on 5th attempt with 401 (max allowed reached)', async () => {
+    const res = await fetch(`${baseUrl}/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: admin.email, password: 'wrongpassword5' }),
+    });
+    assert(res.status === 401, `Expected 401, got ${res.status}`);
+  });
+
+  await test('POST /auth/login returns 429 when rate limit exceeded on 6th failed attempt', async () => {
+    const res = await fetch(`${baseUrl}/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: admin.email, password: 'wrongpassword6' }),
+    });
+    const data = await res.json();
+    assert(res.status === 429, `Expected 429, got ${res.status}`);
+    assert(data.success === false, 'Expected success: false');
+    assert(data.message.includes('Too many failed login attempts'), `Expected rate limit message, got "${data.message}"`);
+    assert(res.headers.get('ratelimit-limit') === '5', 'Expected RateLimit-Limit: 5');
+    assert(res.headers.get('ratelimit-remaining') === '0', 'Expected RateLimit-Remaining: 0');
   });
 
   await test('GET /auth/me without token returns 401', async () => {
@@ -95,13 +148,27 @@ async function runTestSuite() {
     assert(res.status === 401, `Expected 401, got ${res.status}`);
   });
 
-  await test('GET /auth/me with valid token returns user data', async () => {
+  await test('GET /auth/me with valid token returns user data (unaffected by /auth/login rate limiter)', async () => {
     const res = await fetch(`${baseUrl}/auth/me`, {
       headers: { Authorization: `Bearer ${adminToken}` },
     });
     const data = await res.json();
     assert(res.status === 200, `Expected 200, got ${res.status}`);
     assert(data.data.email === admin.email, 'Email should match');
+  });
+
+  await test('Resetting rate limiter allows login attempts again', async () => {
+    await authRateLimiter.resetKey('127.0.0.1');
+    await authRateLimiter.resetKey('::ffff:127.0.0.1');
+
+    const res = await fetch(`${baseUrl}/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: admin.email, password: 'admin123' }),
+    });
+    const data = await res.json();
+    assert(res.status === 200, `Expected 200 after reset, got ${res.status}`);
+    assert(data.success === true, 'Expected success: true after reset');
   });
 
   console.log('\n--- 3. Admin Dashboard Statistics ---');
