@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
+const mongoose = require('mongoose');
 
 const app = express();
 
@@ -73,11 +74,26 @@ app.use(express.json());
 // Routes
 // ---------------------------------------------------------------------------
 
-// Health check — confirms the API is running.
+// Health check — confirms API availability and MongoDB connection state
 app.get('/api/health', (req, res) => {
-  res.status(200).json({
-    success: true,
-    message: 'Valluvam API is running',
+  const isConnected = mongoose.connection.readyState === 1;
+
+  const dbStateMap = {
+    0: 'disconnected',
+    1: 'connected',
+    2: 'connecting',
+    3: 'disconnecting',
+  };
+
+  const dbStatus = dbStateMap[mongoose.connection.readyState] || 'unavailable';
+  const statusCode = isConnected ? 200 : 503;
+
+  res.status(statusCode).json({
+    success: isConnected,
+    status: isConnected ? 'healthy' : 'degraded',
+    database: dbStatus,
+    environment: process.env.NODE_ENV || 'development',
+    timestamp: new Date().toISOString(),
   });
 });
 
