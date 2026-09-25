@@ -101,8 +101,8 @@ function Home() {
         aria-labelledby="who-we-are-title"
         className="bg-white py-16 sm:py-20 lg:py-24"
       >
-        <div className="mx-auto max-w-3xl px-6">
-          <div>
+        <div className="mx-auto max-w-7xl px-6">
+          <div className="max-w-3xl">
             <div aria-hidden="true" className="mb-6 h-1 w-14 rounded-full bg-bronze-500" />
             <h2
               id="who-we-are-title"
