@@ -118,26 +118,15 @@ app.use('/api/support', require('./routes/support'));
 app.use('/api/admin', require('./routes/admin'));
 
 // ---------------------------------------------------------------------------
-// 404 Catch-All for undefined routes — ensures JSON response
+// Error Handling Middleware
 // ---------------------------------------------------------------------------
-app.use((req, res) => {
-  res.status(404).json({
-    success: false,
-    message: `Cannot ${req.method} ${req.originalUrl}`,
-  });
-});
+const { notFoundHandler, errorHandler } = require('./middleware/errorHandler');
 
-// ---------------------------------------------------------------------------
-// Central Error Handler — guarantees all errors return JSON with CORS headers
-// ---------------------------------------------------------------------------
-app.use((err, req, res, next) => {
-  console.error('Unhandled server error:', err);
-  const status = err.statusCode || err.status || 500;
-  res.status(status).json({
-    success: false,
-    message: err.message || 'Internal server error',
-  });
-});
+// 404 Catch-All for undefined routes — ensures standard JSON response
+app.use(notFoundHandler);
+
+// Central Error Handler — guarantees all errors return standard JSON with CORS headers
+app.use(errorHandler);
 
 module.exports = app;
 

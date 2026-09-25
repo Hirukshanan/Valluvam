@@ -15,6 +15,7 @@ const { Support } = require('../src/models/Support');
 const Volunteer = require('../src/models/Volunteer');
 const Contact = require('../src/models/Contact');
 const { authRateLimiter } = require('../src/middleware/rateLimiter');
+const { errorHandler, AppError } = require('../src/middleware/errorHandler');
 
 async function runTestSuite() {
   console.log('Connecting to database for test suite...');
@@ -424,7 +425,105 @@ async function runTestSuite() {
     assert(Array.isArray(data.data) && data.data.length > 0, 'Must have support options');
   });
 
-  console.log('\n--- 11. Health Check with Disconnected Database ---');
+  console.log('\n--- 11. Centralized Error Handling & Security ---');
+  await test('Forbidden request with non-admin role returns 403', async () => {
+    const { authorize } = require('../src/middleware/auth');
+    const authMw = authorize('admin');
+    let statusCode = null;
+    let jsonBody = null;
+    const mockRes = {
+      status(c) {
+        statusCode = c;
+        return this;
+      },
+      json(d) {
+        jsonBody = d;
+        return this;
+      },
+    };
+    authMw({ user: { role: 'member' } }, mockRes, () => {});
+    assert(statusCode === 403, `Expected 403, got ${statusCode}`);
+    assert(jsonBody.success === false, 'Expected success: false');
+    assert(jsonBody.message.includes('Forbidden') || jsonBody.message.includes('insufficient'), `Expected forbidden message, got ${jsonBody.message}`);
+  });
+
+  await test('Malformed JSON body returns 400 from centralized handler', async () => {
+    const res = await fetch(`${baseUrl}/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: '{"invalid json',
+    });
+    const data = await res.json();
+    assert(res.status === 400, `Expected 400, got ${res.status}`);
+    assert(data.success === false, 'Expected success: false');
+    assert(data.message.includes('JSON'), `Expected JSON error message, got ${data.message}`);
+  });
+
+  await test('Centralized errorHandler handles CastError, ValidationError, DuplicateKey, and 500 without leaking stack traces', async () => {
+    function createMockRes() {
+      const res = {
+        statusCode: null,
+        jsonData: null,
+        status(code) {
+          this.statusCode = code;
+          return this;
+        },
+        json(data) {
+          this.jsonData = data;
+          return this;
+        },
+      };
+      return res;
+    }
+
+    const req = { method: 'POST', originalUrl: '/api/test' };
+
+    // 1. CastError (invalid ObjectId)
+    const res1 = createMockRes();
+    errorHandler({ name: 'CastError', path: '_id' }, req, res1, () => {});
+    assert(res1.statusCode === 400, `Expected 400, got ${res1.statusCode}`);
+    assert(res1.jsonData.success === false, 'Expected success: false');
+    assert(!res1.jsonData.stack, 'Stack trace must not be exposed');
+
+    // 2. ValidationError
+    const res2 = createMockRes();
+    errorHandler(
+      {
+        name: 'ValidationError',
+        errors: { name: { message: 'Name is required' }, email: { message: 'Email is invalid' } },
+      },
+      req,
+      res2,
+      () => {}
+    );
+    assert(res2.statusCode === 400, `Expected 400, got ${res2.statusCode}`);
+    assert(res2.jsonData.message.includes('Name is required'), 'Expected validation message');
+    assert(!res2.jsonData.stack, 'Stack trace must not be exposed');
+
+    // 3. Mongo Duplicate Key (11000)
+    const res3 = createMockRes();
+    errorHandler({ code: 11000, keyValue: { email: 'test@example.com' } }, req, res3, () => {});
+    assert(res3.statusCode === 409, `Expected 409, got ${res3.statusCode}`);
+    assert(res3.jsonData.message.includes('email'), 'Expected duplicate field mentioned');
+    assert(!res3.jsonData.stack, 'Stack trace must not be exposed');
+
+    // 4. JWT errors
+    const res4 = createMockRes();
+    errorHandler({ name: 'JsonWebTokenError' }, req, res4, () => {});
+    assert(res4.statusCode === 401, `Expected 401, got ${res4.statusCode}`);
+
+    // 5. Unexpected 500 Error
+    const res5 = createMockRes();
+    const origEnv = process.env.NODE_ENV;
+    process.env.NODE_ENV = 'production';
+    errorHandler(new Error('Fatal internal database password leak at /var/secrets'), req, res5, () => {});
+    process.env.NODE_ENV = origEnv;
+    assert(res5.statusCode === 500, `Expected 500, got ${res5.statusCode}`);
+    assert(res5.jsonData.message === 'Internal server error', 'Production 500 error must be sanitized');
+    assert(!res5.jsonData.stack, 'Stack trace must not be exposed');
+  });
+
+  console.log('\n--- 12. Health Check with Disconnected Database ---');
   await test('GET /health returns 503 degraded when MongoDB is disconnected', async () => {
     await mongoose.disconnect();
     const res = await fetch(`${baseUrl}/health`);
