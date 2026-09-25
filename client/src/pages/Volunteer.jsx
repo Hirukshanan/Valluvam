@@ -2,37 +2,39 @@ import { useState, useRef } from 'react';
 import { submitVolunteer } from '../services/volunteerService';
 import Turnstile from '../components/Turnstile';
 import { useSettings } from '../context/SettingsContext';
+import { useLanguage } from '../context/LanguageContext';
 
 const VOLUNTEER_AREAS = [
-  'Teaching & Educational Support',
-  'Event & Community Support',
-  'Volunteer Coordination',
-  'Skills & Professional Support',
-  'Other',
+  { value: 'Teaching & Educational Support', labelKey: 'volunteer.areasList.teaching' },
+  { value: 'Event & Community Support', labelKey: 'volunteer.areasList.events' },
+  { value: 'Volunteer Coordination', labelKey: 'volunteer.areasList.coordination' },
+  { value: 'Skills & Professional Support', labelKey: 'volunteer.areasList.skills' },
+  { value: 'Other', labelKey: 'volunteer.areasList.other' },
 ];
 
-const AVAILABILITY_OPTIONS = ['Weekdays', 'Weekends', 'Both', 'Flexible'];
+const AVAILABILITY_OPTIONS = [
+  { value: 'Weekdays', labelKey: 'volunteer.availabilityList.weekdays' },
+  { value: 'Weekends', labelKey: 'volunteer.availabilityList.weekends' },
+  { value: 'Both', labelKey: 'volunteer.availabilityList.both' },
+  { value: 'Flexible', labelKey: 'volunteer.availabilityList.flexible' },
+];
 
-const WAYS_TO_HELP = [
+const getWaysToHelp = (t) => [
   {
-    title: 'Teaching & Educational Support',
-    description:
-      'Help children and youth by tutoring, mentoring, or assisting with educational programmes and workshops.',
+    title: t('volunteer.ways.teachingTitle'),
+    description: t('volunteer.ways.teachingDesc'),
   },
   {
-    title: 'Event & Community Support',
-    description:
-      'Assist in organising and running community events, cultural programmes, and outreach initiatives.',
+    title: t('volunteer.ways.eventsTitle'),
+    description: t('volunteer.ways.eventsDesc'),
   },
   {
-    title: 'Volunteer Coordination',
-    description:
-      'Help manage and coordinate volunteer teams, schedules, and communications to keep activities running smoothly.',
+    title: t('volunteer.ways.coordinationTitle'),
+    description: t('volunteer.ways.coordinationDesc'),
   },
   {
-    title: 'Skills & Professional Support',
-    description:
-      'Contribute your professional expertise — in areas such as design, IT, law, health, or administration — to strengthen our work.',
+    title: t('volunteer.ways.skillsTitle'),
+    description: t('volunteer.ways.skillsDesc'),
   },
 ];
 
@@ -54,6 +56,7 @@ const initialForm = {
 
 function Volunteer() {
   const { settings } = useSettings();
+  const { t } = useLanguage();
   const [form, setForm] = useState(initialForm);
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -61,21 +64,23 @@ function Volunteer() {
   const [serverError, setServerError] = useState('');
   const turnstileRef = useRef(null);
 
+  const waysToHelp = getWaysToHelp(t);
+
   function validate() {
     const errs = {};
     if (!form.name.trim()) {
-      errs.name = 'Full name is required';
+      errs.name = t('volunteer.validation.nameRequired');
     }
     if (!form.email.trim()) {
-      errs.email = 'Email address is required';
+      errs.email = t('volunteer.validation.emailRequired');
     } else {
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(form.email.trim())) {
-        errs.email = 'Please provide a valid email address';
+        errs.email = t('volunteer.validation.emailInvalid');
       }
     }
     if (!form.message.trim()) {
-      errs.message = 'Short message is required';
+      errs.message = t('volunteer.validation.messageRequired');
     }
     return errs;
   }
@@ -117,7 +122,7 @@ function Volunteer() {
       token = await turnstileRef.current?.execute();
     } catch (turnstileErr) {
       setServerError(
-        turnstileErr.message || 'Security verification failed. Please try again.'
+        turnstileErr.message || t('volunteer.validation.securityFailed')
       );
       turnstileRef.current?.reset();
       setIsSubmitting(false);
@@ -125,7 +130,7 @@ function Volunteer() {
     }
 
     if (!token) {
-      setServerError('Security verification could not be completed. Please try again.');
+      setServerError(t('volunteer.validation.securityIncomplete'));
       turnstileRef.current?.reset();
       setIsSubmitting(false);
       return;
@@ -148,7 +153,7 @@ function Volunteer() {
       turnstileRef.current?.reset();
     } catch (err) {
       setServerError(
-        err.message || 'Something went wrong while submitting your application. Please try again.'
+        err.message || t('volunteer.validation.generalError')
       );
       turnstileRef.current?.reset();
     } finally {
@@ -164,12 +169,10 @@ function Volunteer() {
           <div className="max-w-2xl">
             <div aria-hidden="true" className="mb-6 h-1 w-14 rounded-full bg-bronze-500" />
             <h1 className="text-4xl font-bold tracking-tight text-charcoal-950 sm:text-5xl">
-              Volunteer With {settings.organizationName}
+              {t('volunteer.title', { org: settings.organizationName })}
             </h1>
             <p className="mt-6 text-base leading-8 text-charcoal-700 sm:text-lg">
-              {settings.organizationName} is built on the commitment of people who care. Whether you have a few hours
-              a week or a specific skill to share, your time and support can make a real difference
-              in the lives of our community. Join us and be part of something meaningful.
+              {t('volunteer.subhead', { org: settings.organizationName })}
             </p>
           </div>
         </div>
@@ -184,15 +187,14 @@ function Volunteer() {
               id="ways-to-help-title"
               className="text-2xl font-semibold text-charcoal-950"
             >
-              Ways You Can Help
+              {t('volunteer.waysToHelpHeading')}
             </h2>
             <p className="mt-3 text-base leading-7 text-charcoal-700">
-              There are many ways to contribute your time, skills, and energy to {settings.organizationName}'s
-              activities. Choose an area that suits you best.
+              {t('volunteer.waysToHelpSubhead', { org: settings.organizationName })}
             </p>
 
-            <ul className="mt-8 space-y-5" aria-label="Volunteering areas">
-              {WAYS_TO_HELP.map(({ title, description }) => (
+            <ul className="mt-8 space-y-5" aria-label={t('volunteer.waysToHelpAria')}>
+              {waysToHelp.map(({ title, description }) => (
                 <li
                   key={title}
                   className="rounded-xl border border-bronze-100 bg-bronze-50 p-5"
@@ -210,14 +212,13 @@ function Volunteer() {
               id="volunteer-form-title"
               className="text-2xl font-semibold text-charcoal-950"
             >
-              Express Your Interest
+              {t('volunteer.formHeading')}
             </h2>
             <p
               id="volunteer-form-note"
               className="mt-2 text-sm text-charcoal-700"
             >
-              Fields marked with <span aria-hidden="true">*</span>
-              <span className="sr-only">an asterisk</span> are required.
+              {t('volunteer.formNoteAsterisk')}
             </p>
 
             {/* Success message banner */}
@@ -240,9 +241,9 @@ function Volunteer() {
                     />
                   </svg>
                   <div>
-                    <p className="text-sm font-semibold">Thank you for your interest in volunteering!</p>
+                    <p className="text-sm font-semibold">{t('volunteer.successTitle')}</p>
                     <p className="mt-1 text-sm text-emerald-700">
-                      Your details have been submitted successfully. Our team will review your application and get in touch with you soon.
+                      {t('volunteer.successDesc')}
                     </p>
                   </div>
                 </div>
@@ -276,7 +277,7 @@ function Volunteer() {
                     onClick={() => setServerError('')}
                     className="ml-auto text-xs font-semibold text-red-700 hover:underline"
                   >
-                    Dismiss
+                    {t('common.dismiss')}
                   </button>
                 </div>
               </div>
@@ -295,7 +296,7 @@ function Volunteer() {
                   htmlFor="vol-name"
                   className="block text-sm font-semibold text-charcoal-950"
                 >
-                  Full Name <span aria-hidden="true">*</span>
+                  {t('volunteer.nameLabel')} <span aria-hidden="true">*</span>
                 </label>
                 <input
                   id="vol-name"
@@ -321,7 +322,7 @@ function Volunteer() {
                   htmlFor="vol-email"
                   className="block text-sm font-semibold text-charcoal-950"
                 >
-                  Email Address <span aria-hidden="true">*</span>
+                  {t('volunteer.emailLabel')} <span aria-hidden="true">*</span>
                 </label>
                 <input
                   id="vol-email"
@@ -347,7 +348,7 @@ function Volunteer() {
                   htmlFor="vol-phone"
                   className="block text-sm font-semibold text-charcoal-950"
                 >
-                  Phone Number
+                  {t('volunteer.phoneLabel')}
                 </label>
                 <input
                   id="vol-phone"
@@ -367,7 +368,7 @@ function Volunteer() {
                   htmlFor="vol-location"
                   className="block text-sm font-semibold text-charcoal-950"
                 >
-                  Area / Location
+                  {t('volunteer.locationLabel')}
                 </label>
                 <input
                   id="vol-location"
@@ -387,7 +388,7 @@ function Volunteer() {
                   htmlFor="vol-area"
                   className="block text-sm font-semibold text-charcoal-950"
                 >
-                  Preferred Area of Volunteering
+                  {t('volunteer.areaLabel')}
                 </label>
                 <select
                   id="vol-area"
@@ -398,11 +399,11 @@ function Volunteer() {
                   className={selectClassName}
                 >
                   <option value="">
-                    Select an area…
+                    {t('volunteer.selectArea')}
                   </option>
                   {VOLUNTEER_AREAS.map((area) => (
-                    <option key={area} value={area}>
-                      {area}
+                    <option key={area.value} value={area.value}>
+                      {t(area.labelKey)}
                     </option>
                   ))}
                 </select>
@@ -414,7 +415,7 @@ function Volunteer() {
                   htmlFor="vol-availability"
                   className="block text-sm font-semibold text-charcoal-950"
                 >
-                  Availability
+                  {t('volunteer.availabilityLabel')}
                 </label>
                 <select
                   id="vol-availability"
@@ -425,11 +426,11 @@ function Volunteer() {
                   className={selectClassName}
                 >
                   <option value="">
-                    Select availability…
+                    {t('volunteer.selectAvailability')}
                   </option>
                   {AVAILABILITY_OPTIONS.map((opt) => (
-                    <option key={opt} value={opt}>
-                      {opt}
+                    <option key={opt.value} value={opt.value}>
+                      {t(opt.labelKey)}
                     </option>
                   ))}
                 </select>
@@ -441,10 +442,10 @@ function Volunteer() {
                   htmlFor="vol-message"
                   className="block text-sm font-semibold text-charcoal-950"
                 >
-                  Short Message <span aria-hidden="true">*</span>
+                  {t('volunteer.messageLabel')} <span aria-hidden="true">*</span>
                 </label>
                 <p id="vol-message-hint" className="mt-1 text-xs text-charcoal-500">
-                  Tell us a little about yourself and why you'd like to volunteer with {settings.organizationName}.
+                  {t('volunteer.messageHint', { org: settings.organizationName })}
                 </p>
                 <textarea
                   id="vol-message"
@@ -483,10 +484,10 @@ function Volunteer() {
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
                     </svg>
-                    Submitting…
+                    {t('volunteer.submittingButton')}
                   </>
                 ) : (
-                  'Submit Volunteer Interest'
+                  t('volunteer.submitButton')
                 )}
               </button>
             </form>

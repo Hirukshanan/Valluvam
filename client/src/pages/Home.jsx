@@ -1,32 +1,35 @@
 import { Link } from 'react-router-dom';
 import { useSettings } from '../context/SettingsContext';
+import { useLanguage } from '../context/LanguageContext';
 import backdrop from '../assets/Backdrop.jpg';
 
-const activityAreas = [
+const getActivityAreas = (t) => [
   {
-    title: 'Educational Support',
-    description: 'Providing past papers, books, and educational resources to students.',
+    title: t('home.activities.educationalSupportTitle'),
+    description: t('home.activities.educationalSupportDesc'),
     iconPath: 'M12 6v15m0-15C9 4 5 4 2 5v14c3-1 7-1 10 2m0-15c3-2 7-2 10-1v14c-3-1-7-1-10 2',
   },
   {
-    title: 'Student Assistance',
-    description: 'Helping students from low-income families with bicycles and learning materials.',
+    title: t('home.activities.studentAssistanceTitle'),
+    description: t('home.activities.studentAssistanceDesc'),
     iconPath: 'M9 5V4a3 3 0 0 1 6 0v1M8 5h8a3 3 0 0 1 3 3v11a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V8a3 3 0 0 1 3-3Zm0 16v-7h8v7M9 9h6',
   },
   {
-    title: 'Rural Education',
-    description: 'Teaching and supporting students in rural communities.',
+    title: t('home.activities.ruralEducationTitle'),
+    description: t('home.activities.ruralEducationDesc'),
     iconPath: 'm3 10 9-7 9 7M5 9v12h14V9M10 21v-6h4v6M8 11h1m6 0h1M12 3V1',
   },
   {
-    title: 'Community Relief',
-    description: 'Providing food and essentials to families and communities during natural disasters and difficult periods.',
+    title: t('home.activities.communityReliefTitle'),
+    description: t('home.activities.communityReliefDesc'),
     iconPath: 'm3 7 9-4 9 4v12l-9 3-9-3V7Zm0 0 9 4 9-4M12 11v11M7.5 5l9 4v5',
   },
 ];
 
 function Home() {
   const { settings } = useSettings();
+  const { t } = useLanguage();
+  const activityAreas = getActivityAreas(t);
 
   return (
     <main>
@@ -50,7 +53,7 @@ function Home() {
         <div className="mx-auto flex min-h-[640px] max-w-7xl items-center px-6 py-16 sm:min-h-[700px] sm:py-20 lg:min-h-[760px] lg:py-24">
           <div className="max-w-xl">
             <p className="text-sm font-semibold tracking-wide text-bronze-200">
-              Registered nonprofit organization
+              {t('common.registeredNonprofit')}
             </p>
             <h1
               id="hero-title"
@@ -63,8 +66,7 @@ function Home() {
               “{settings.slogan}”
             </p>
             <p className="mt-6 max-w-xl text-base leading-8 text-white/90 sm:text-lg">
-              {settings.organizationName} supports students, children, low-income families, and rural
-              communities through education, resources, and social service initiatives.
+              {t('home.heroSubhead', { org: settings.organizationName })}
             </p>
 
             <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:gap-4">
@@ -72,13 +74,13 @@ function Home() {
                 to="/our-work"
                 className="inline-flex min-h-12 items-center justify-center rounded-md border border-bronze-700 bg-bronze-700 px-6 py-3 text-sm font-semibold text-white transition-colors hover:border-bronze-800 hover:bg-bronze-800 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-bronze-600"
               >
-                Explore Our Work
+                {t('home.exploreWork')}
               </Link>
               <Link
                 to="/support"
                 className="inline-flex min-h-12 items-center justify-center rounded-md border border-bronze-300 bg-white px-6 py-3 text-sm font-semibold text-charcoal-950 transition-colors hover:border-bronze-500 hover:bg-bronze-100 hover:text-bronze-800 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-bronze-600"
               >
-                Support Us
+                {t('home.supportUs')}
               </Link>
             </div>
 
@@ -101,22 +103,23 @@ function Home() {
               id="who-we-are-title"
               className="text-3xl font-bold tracking-tight text-charcoal-950 sm:text-4xl"
             >
-              Who We Are
+              {t('home.whoWeAreHeading')}
             </h2>
             <p className="mt-6 text-base leading-8 text-charcoal-700 sm:text-lg">
-              {settings.organizationName} is a registered nonprofit organization established on{' '}
-              <time>{settings.establishedDate}</time> in {settings.location}. It was created with a commitment to make education and
-              community support more accessible to people who need it most.
+              {t('home.whoWeAreText1', {
+                org: settings.organizationName,
+                date: settings.establishedDate,
+                location: settings.location,
+              })}
             </p>
             <p className="mt-4 text-base leading-8 text-charcoal-700 sm:text-lg">
-              Our work is guided by the belief that meaningful opportunities and
-              timely support can help individuals and communities move forward.
+              {t('home.whoWeAreText2')}
             </p>
             <Link
               to="/about"
               className="mt-8 inline-flex min-h-12 w-full items-center justify-center rounded-md border border-bronze-700 bg-bronze-700 px-6 py-3 text-sm font-semibold text-white transition-colors hover:border-bronze-800 hover:bg-bronze-800 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-bronze-600 sm:w-auto"
             >
-              Learn More About Us
+              {t('home.learnMoreAboutUs')}
             </Link>
           </div>
         </div>
@@ -131,10 +134,10 @@ function Home() {
             id="what-we-do-title"
             className="text-3xl font-bold tracking-tight text-charcoal-950 sm:text-4xl"
           >
-            What We Do
+            {t('home.whatWeDoHeading')}
           </h2>
           <p className="mt-4 text-base leading-8 text-charcoal-700 sm:text-lg">
-            Our work spans learning support and community relief.
+            {t('home.whatWeDoSubhead')}
           </p>
 
           <ul className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
@@ -165,7 +168,7 @@ function Home() {
             to="/our-work"
             className="mt-8 inline-flex min-h-12 w-full items-center justify-center rounded-md border border-bronze-700 px-6 py-3 text-sm font-semibold text-bronze-700 transition-colors hover:bg-bronze-100 hover:text-bronze-800 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-bronze-600 sm:w-auto"
           >
-            View Our Work
+            {t('home.viewOurWork')}
           </Link>
         </div>
       </section>
@@ -179,39 +182,39 @@ function Home() {
             id="get-involved-title"
             className="text-3xl font-bold tracking-tight text-charcoal-950 sm:text-4xl"
           >
-            Get Involved
+            {t('home.getInvolvedHeading')}
           </h2>
           <p className="mt-4 text-base leading-8 text-charcoal-700 sm:text-lg">
-            Support {settings.organizationName} in practical ways by giving your time, skills, or resources.
+            {t('home.getInvolvedSubhead', { org: settings.organizationName })}
           </p>
 
           <div className="mt-10 grid gap-6 md:grid-cols-2">
             <div className="flex flex-col rounded-xl border border-bronze-100 bg-bronze-50 p-6 sm:p-8">
-              <h3 className="text-2xl font-semibold text-charcoal-950">Volunteer</h3>
+              <h3 className="text-2xl font-semibold text-charcoal-950">{t('home.volunteerCardTitle')}</h3>
               <p className="mt-3 text-base leading-7 text-charcoal-700">
-                Contribute your time and skills to support {settings.organizationName} activities.
+                {t('home.volunteerCardText', { org: settings.organizationName })}
               </p>
               <div className="mt-auto pt-6">
                 <Link
                   to="/volunteer"
                   className="inline-flex min-h-12 w-full items-center justify-center rounded-md border border-bronze-700 bg-bronze-700 px-6 py-3 text-sm font-semibold text-white transition-colors hover:border-bronze-800 hover:bg-bronze-800 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-bronze-600 sm:w-auto"
                 >
-                  Become a Volunteer
+                  {t('home.becomeVolunteer')}
                 </Link>
               </div>
             </div>
 
             <div className="flex flex-col rounded-xl border border-bronze-100 bg-bronze-50 p-6 sm:p-8">
-              <h3 className="text-2xl font-semibold text-charcoal-950">Support {settings.organizationName}</h3>
+              <h3 className="text-2xl font-semibold text-charcoal-950">{t('home.supportCardTitle', { org: settings.organizationName })}</h3>
               <p className="mt-3 text-base leading-7 text-charcoal-700">
-                Help sustain {settings.organizationName}'s educational and community initiatives with your support.
+                {t('home.supportCardText', { org: settings.organizationName })}
               </p>
               <div className="mt-auto pt-6">
                 <Link
                   to="/support"
                   className="inline-flex min-h-12 w-full items-center justify-center rounded-md border border-bronze-700 bg-bronze-700 px-6 py-3 text-sm font-semibold text-white transition-colors hover:border-bronze-800 hover:bg-bronze-800 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-bronze-600 sm:w-auto"
                 >
-                  Support Us
+                  {t('home.supportCardButton')}
                 </Link>
               </div>
             </div>

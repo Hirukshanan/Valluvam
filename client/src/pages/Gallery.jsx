@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { fetchGalleryAlbums } from '../services/galleryService';
 import { useSettings } from '../context/SettingsContext';
+import { useLanguage } from '../context/LanguageContext';
 
 /**
  * Format ISO date string into readable British English date.
@@ -24,6 +25,7 @@ function formatAlbumDate(dateStr) {
  * Displays cover image (in 4:3 frame with object-contain), title, category, date, and photo count.
  */
 function AlbumCard({ album, onClick }) {
+  const { t } = useLanguage();
   const photoCount =
     album.photos && album.photos.length > 0
       ? album.photos.length
@@ -48,7 +50,7 @@ function AlbumCard({ album, onClick }) {
         }
       }}
       className="group flex flex-col overflow-hidden rounded-xl border border-bronze-100 bg-white shadow-xs transition-all duration-200 hover:-translate-y-1 hover:border-bronze-300 hover:shadow-md cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-bronze-500"
-      aria-label={`View album: ${album.title}`}
+      aria-label={`${t('gallery.viewAlbum')} ${album.title}`}
     >
       {/* 4:3 fixed aspect-ratio image container */}
       <div className="relative aspect-[4/3] w-full overflow-hidden bg-charcoal-50 flex items-center justify-center">
@@ -78,7 +80,7 @@ function AlbumCard({ album, onClick }) {
             <circle cx="8.5" cy="8.5" r="1.5" />
             <polyline points="21 15 16 10 5 21" />
           </svg>
-          <span>{photoCount} {photoCount === 1 ? 'photo' : 'photos'}</span>
+          <span>{photoCount} {photoCount === 1 ? t('gallery.singlePhoto') : t('gallery.multiplePhotos')}</span>
         </div>
       </div>
 
@@ -106,7 +108,7 @@ function AlbumCard({ album, onClick }) {
           <div className="mt-3 pt-2.5 border-t border-charcoal-100 flex items-center justify-between text-xs text-charcoal-500">
             <time dateTime={album.date}>{formattedDate}</time>
             <span className="font-medium text-bronze-600 group-hover:translate-x-0.5 transition-transform flex items-center gap-0.5">
-              View album →
+              {t('gallery.viewAlbum')}
             </span>
           </div>
         )}
@@ -119,10 +121,11 @@ function AlbumCard({ album, onClick }) {
  * Animated skeleton placeholder cards shown during loading state.
  */
 function GalleryLoadingSkeleton() {
+  const { t } = useLanguage();
   return (
     <div
       className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
-      aria-label="Loading albums..."
+      aria-label={t('gallery.loadingAlbums')}
     >
       {[1, 2, 3, 4].map((n) => (
         <div
@@ -149,6 +152,7 @@ function GalleryLoadingSkeleton() {
  * Error state with retry action.
  */
 function GalleryErrorState({ error, onRetry }) {
+  const { t } = useLanguage();
   return (
     <div className="flex flex-col items-center justify-center rounded-xl border border-red-200 bg-red-50/60 p-8 text-center sm:p-12">
       <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-full bg-red-100 text-red-600">
@@ -157,10 +161,10 @@ function GalleryErrorState({ error, onRetry }) {
         </svg>
       </div>
       <h3 className="text-base font-semibold text-charcoal-900">
-        Unable to load gallery albums
+        {t('gallery.errorTitle')}
       </h3>
       <p className="mt-1 max-w-md text-sm text-charcoal-600">
-        {error || 'An error occurred while connecting to the gallery service.'}
+        {error || t('gallery.errorDefault')}
       </p>
       {onRetry && (
         <button
@@ -171,7 +175,7 @@ function GalleryErrorState({ error, onRetry }) {
           <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
           </svg>
-          Try Again
+          {t('common.tryAgain')}
         </button>
       )}
     </div>
@@ -183,6 +187,7 @@ function GalleryErrorState({ error, onRetry }) {
  */
 function GalleryEmptyState() {
   const { settings } = useSettings();
+  const { t } = useLanguage();
   return (
     <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-bronze-200 bg-bronze-50 px-6 py-24 text-center">
       <div
@@ -203,11 +208,10 @@ function GalleryEmptyState() {
         </svg>
       </div>
       <p className="text-base font-medium text-charcoal-950">
-        Our gallery will be updated with photos from {settings.organizationName}'s activities and events.
+        {t('gallery.emptyTitle', { org: settings.organizationName })}
       </p>
       <p className="mt-2 max-w-sm text-sm leading-6 text-charcoal-500">
-        Follow us on social media to see photos from our latest community and
-        educational initiatives.
+        {t('gallery.emptyDesc')}
       </p>
     </div>
   );
@@ -219,6 +223,7 @@ function GalleryEmptyState() {
  * Supports keyboard navigation (Left, Right, Escape) and locks background scrolling.
  */
 function AlbumViewerModal({ album, onClose }) {
+  const { t } = useLanguage();
   // Sort photos by order; fallback to cover image if photos list is empty
   const rawPhotos = album.photos && album.photos.length > 0 ? album.photos : [];
   const sortedPhotos = [...rawPhotos].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
@@ -272,7 +277,7 @@ function AlbumViewerModal({ album, onClose }) {
     <div
       role="dialog"
       aria-modal="true"
-      aria-label={`Album viewer: ${album.title}`}
+      aria-label={t('gallery.modalAria', { title: album.title })}
       className="fixed inset-0 z-50 flex flex-col bg-charcoal-950/95 backdrop-blur-md transition-opacity duration-200"
       onClick={onClose}
     >
@@ -302,7 +307,7 @@ function AlbumViewerModal({ album, onClose }) {
           <button
             type="button"
             onClick={onClose}
-            aria-label="Close album viewer"
+            aria-label={t('gallery.closeModal')}
             className="rounded-lg bg-charcoal-800 p-1.5 text-charcoal-300 hover:bg-charcoal-700 hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-bronze-400"
           >
             <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -322,7 +327,7 @@ function AlbumViewerModal({ album, onClose }) {
           <button
             type="button"
             onClick={handlePrev}
-            aria-label="Previous photo"
+            aria-label={t('gallery.prevPhoto')}
             className="absolute left-2 sm:left-6 z-10 flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-full bg-charcoal-900/80 text-white shadow-lg backdrop-blur-xs transition hover:bg-bronze-600 focus:outline-none focus:ring-2 focus:ring-bronze-400"
           >
             <svg className="h-5 w-5 sm:h-6 sm:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -342,7 +347,7 @@ function AlbumViewerModal({ album, onClose }) {
           </div>
         ) : (
           <div className="text-center text-charcoal-400">
-            <p>No image available for this photo</p>
+            <p>{t('gallery.noImageForPhoto')}</p>
           </div>
         )}
 
@@ -351,7 +356,7 @@ function AlbumViewerModal({ album, onClose }) {
           <button
             type="button"
             onClick={handleNext}
-            aria-label="Next photo"
+            aria-label={t('gallery.nextPhoto')}
             className="absolute right-2 sm:right-6 z-10 flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-full bg-charcoal-900/80 text-white shadow-lg backdrop-blur-xs transition hover:bg-bronze-600 focus:outline-none focus:ring-2 focus:ring-bronze-400"
           >
             <svg className="h-5 w-5 sm:h-6 sm:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -375,7 +380,7 @@ function AlbumViewerModal({ album, onClose }) {
                   key={photo._id || `${photo.imageUrl}-${index}`}
                   type="button"
                   onClick={() => setCurrentIndex(index)}
-                  aria-label={`Jump to photo ${index + 1}`}
+                  aria-label={t('gallery.jumpToPhoto', { index: index + 1 })}
                   className={`relative aspect-[4/3] h-11 sm:h-13 shrink-0 overflow-hidden rounded-md border bg-charcoal-900 transition-all ${
                     isSelected
                       ? 'border-bronze-400 ring-2 ring-bronze-400/80 opacity-100 scale-105'
@@ -399,6 +404,7 @@ function AlbumViewerModal({ album, onClose }) {
 
 function Gallery() {
   const { settings } = useSettings();
+  const { t } = useLanguage();
   const [albums, setAlbums] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -429,12 +435,10 @@ function Gallery() {
           <div className="max-w-2xl">
             <div aria-hidden="true" className="mb-6 h-1 w-14 rounded-full bg-bronze-500" />
             <h1 className="text-4xl font-bold tracking-tight text-charcoal-950 sm:text-5xl">
-              Gallery
+              {t('gallery.title')}
             </h1>
             <p className="mt-6 text-base leading-8 text-charcoal-700 sm:text-lg">
-              A look at {settings.organizationName}'s activities, events, educational support, and
-              community work through photographs. Images from our initiatives
-              and programmes will be shared here.
+              {t('gallery.subhead', { org: settings.organizationName })}
             </p>
           </div>
         </div>
@@ -453,16 +457,16 @@ function Gallery() {
                 id="gallery-section-title"
                 className="text-3xl font-bold tracking-tight text-charcoal-950 sm:text-4xl"
               >
-                Photo Albums
+                {t('gallery.albumsHeading')}
               </h2>
               <p className="mt-4 text-base leading-8 text-charcoal-700 sm:text-lg">
-                Explore moments from {settings.organizationName}'s community, educational, and social initiatives.
+                {t('gallery.albumsSubhead', { org: settings.organizationName })}
               </p>
             </div>
 
             {!loading && !error && albums.length > 0 && (
               <span className="text-sm font-medium text-charcoal-500 shrink-0">
-                {albums.length} {albums.length === 1 ? 'album' : 'albums'}
+                {albums.length} {albums.length === 1 ? t('gallery.singleAlbum') : t('gallery.multipleAlbums')}
               </span>
             )}
           </div>
@@ -483,7 +487,7 @@ function Gallery() {
             {!loading && !error && albums.length > 0 && (
               <div
                 className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
-                aria-label={`${settings.organizationName} gallery albums`}
+                aria-label={t('gallery.albumsAriaLabel', { org: settings.organizationName })}
               >
                 {albums.map((album) => (
                   <AlbumCard

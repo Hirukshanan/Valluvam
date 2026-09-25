@@ -1,39 +1,35 @@
 import { Link } from 'react-router-dom';
 import { useSettings } from '../context/SettingsContext';
+import { useLanguage } from '../context/LanguageContext';
 
-const getSupportOptions = (organizationName) => [
+const getSupportOptions = (t, organizationName) => [
   {
-    title: 'Support a Student',
-    description:
-      'Help a student in need by contributing towards essentials such as school supplies, learning materials, or transport, so they can focus on their education.',
+    title: t('support.options.studentTitle'),
+    description: t('support.options.studentDesc'),
     iconPath:
       'M12 14a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm-7 6a7 7 0 0 1 14 0M9 11h.01M15 11h.01',
   },
   {
-    title: 'Educational Materials',
-    description:
-      'Support the provision of books, past papers, stationery, and other resources that help students and learners access quality education.',
+    title: t('support.options.materialsTitle'),
+    description: t('support.options.materialsDesc'),
     iconPath:
       'M12 6v15m0-15C9 4 5 4 2 5v14c3-1 7-1 10 2m0-15c3-2 7-2 10-1v14c-3-1-7-1-10 2',
   },
   {
-    title: 'Sponsor an Initiative',
-    description:
-      `Partner with ${organizationName} to sponsor a specific programme or community initiative, helping us plan and deliver more impactful activities.`,
+    title: t('support.options.sponsorTitle'),
+    description: t('support.options.sponsorDesc', { org: organizationName }),
     iconPath:
       'M11.48 3.499a.562.562 0 0 1 1.04 0l2.125 5.111a.563.563 0 0 0 .475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 0 0-.182.557l1.285 5.385a.562.562 0 0 1-.84.61l-4.725-2.885a.562.562 0 0 0-.586 0L6.982 20.54a.562.562 0 0 1-.84-.61l1.285-5.386a.562.562 0 0 0-.182-.557L3.04 10.405a.562.562 0 0 1 .321-.988l5.518-.442a.563.563 0 0 0 .475-.345L11.48 3.5Z',
   },
   {
-    title: 'Volunteer Your Time',
-    description:
-      `Share your skills, knowledge, or energy by volunteering with ${organizationName}. Every hour of your time contributes to a stronger community.`,
+    title: t('support.options.volunteerTitle'),
+    description: t('support.options.volunteerDesc', { org: organizationName }),
     iconPath:
       'M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z',
   },
   {
-    title: 'Community Relief',
-    description:
-      'Contribute to relief efforts that support families and communities during difficult periods, including the provision of food and essential supplies.',
+    title: t('support.options.reliefTitle'),
+    description: t('support.options.reliefDesc'),
     iconPath:
       'm3 7 9-4 9 4v12l-9 3-9-3V7Zm0 0 9 4 9-4M12 11v11M7.5 5l9 4v5',
   },
@@ -41,7 +37,8 @@ const getSupportOptions = (organizationName) => [
 
 function Support() {
   const { settings } = useSettings();
-  const supportOptions = getSupportOptions(settings.organizationName);
+  const { t } = useLanguage();
+  const supportOptions = getSupportOptions(t, settings.organizationName);
   return (
     <main>
       {/* Page header */}
@@ -50,12 +47,10 @@ function Support() {
           <div className="max-w-2xl">
             <div aria-hidden="true" className="mb-6 h-1 w-14 rounded-full bg-bronze-500" />
             <h1 className="text-4xl font-bold tracking-tight text-charcoal-950 sm:text-5xl">
-              Support {settings.organizationName}
+              {t('support.title', { org: settings.organizationName })}
             </h1>
             <p className="mt-6 text-base leading-8 text-charcoal-700 sm:text-lg">
-              Supporting {settings.organizationName} doesn't have to mean a single act. There are many
-              ways to contribute — your time, knowledge, resources, or presence can
-              all make a meaningful difference to the students and communities we serve.
+              {t('support.subhead', { org: settings.organizationName })}
             </p>
           </div>
         </div>
@@ -72,16 +67,15 @@ function Support() {
             id="support-options-title"
             className="text-3xl font-bold tracking-tight text-charcoal-950 sm:text-4xl"
           >
-            Ways to Contribute
+            {t('support.waysHeading')}
           </h2>
           <p className="mt-4 max-w-2xl text-base leading-8 text-charcoal-700 sm:text-lg">
-            Whether you can offer your time, expertise, or resources, there is a
-            meaningful way for you to be part of {settings.organizationName}'s work.
+            {t('support.waysSubhead', { org: settings.organizationName })}
           </p>
 
           <ul
             className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3"
-            aria-label="Support options"
+            aria-label={t('support.optionsAriaLabel')}
           >
             {supportOptions.map(({ title, description, iconPath }) => (
               <li
@@ -126,19 +120,17 @@ function Support() {
               id="support-cta-title"
               className="text-3xl font-bold tracking-tight text-charcoal-950 sm:text-4xl"
             >
-              Want to support {settings.organizationName}?
+              {t('support.ctaHeading', { org: settings.organizationName })}
             </h2>
             <p className="mt-6 text-base leading-8 text-charcoal-700 sm:text-lg">
-              We'd love to hear from you. Reach out to us and we can discuss how
-              you would like to contribute. Every form of support — big or small —
-              helps us continue our work in the community.
+              {t('support.ctaText')}
             </p>
             <div className="mt-8">
               <Link
                 to="/contact"
                 className="inline-flex min-h-12 items-center justify-center rounded-md border border-bronze-700 bg-bronze-700 px-8 py-3 text-sm font-semibold text-white transition-colors hover:border-bronze-800 hover:bg-bronze-800 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-bronze-600"
               >
-                Contact Us
+                {t('support.contactButton')}
               </Link>
             </div>
           </div>

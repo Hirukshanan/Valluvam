@@ -10,6 +10,7 @@
 import { useEffect, useState } from 'react';
 import { fetchEvents } from '../services/eventService';
 import { useSettings } from '../context/SettingsContext';
+import { useLanguage } from '../context/LanguageContext';
 
 // ---------------------------------------------------------------------------
 // Subcomponents
@@ -35,6 +36,7 @@ function isRecentEvent(createdAt) {
  * Props mirror the Event model: title, description, date, location, image, createdAt.
  */
 function EventCard({ image, title, date, location, description, createdAt }) {
+  const { t } = useLanguage();
   const formattedDate = date
     ? new Intl.DateTimeFormat('en-GB', {
         day: 'numeric',
@@ -106,7 +108,7 @@ function EventCard({ image, title, date, location, description, createdAt }) {
           </h3>
           {isNew && (
             <span className="mt-0.5 shrink-0 inline-flex items-center rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-semibold text-emerald-800 ring-1 ring-inset ring-emerald-300">
-              NEW
+              {t('common.newBadge')}
             </span>
           )}
         </div>
@@ -125,6 +127,7 @@ function EventCard({ image, title, date, location, description, createdAt }) {
 /** Shown when no events are available. */
 function EventsEmptyState() {
   const { settings } = useSettings();
+  const { t } = useLanguage();
   return (
     <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-bronze-200 bg-bronze-50 px-6 py-20 text-center">
       <div
@@ -144,11 +147,10 @@ function EventsEmptyState() {
         </svg>
       </div>
       <p className="text-base font-medium text-charcoal-950">
-        Our events and activities will be updated here.
+        {t('events.emptyTitle')}
       </p>
       <p className="mt-2 max-w-sm text-sm leading-6 text-charcoal-500">
-        Check back soon or follow us on social media to stay informed about
-        upcoming {settings.organizationName} events.
+        {t('events.emptyDesc', { org: settings.organizationName })}
       </p>
     </div>
   );
@@ -156,6 +158,7 @@ function EventsEmptyState() {
 
 /** Shown while events are being fetched. */
 function EventsLoadingState() {
+  const { t } = useLanguage();
   return (
     <div className="flex flex-col items-center justify-center rounded-xl border border-bronze-100 bg-bronze-50/50 px-6 py-20 text-center">
       <div
@@ -186,7 +189,7 @@ function EventsLoadingState() {
         </svg>
       </div>
       <p className="text-base font-medium text-charcoal-950">
-        Loading events…
+        {t('events.loadingEvents')}
       </p>
     </div>
   );
@@ -194,6 +197,7 @@ function EventsLoadingState() {
 
 /** Shown when the API request fails. */
 function EventsErrorState({ onRetry }) {
+  const { t } = useLanguage();
   return (
     <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-red-200 bg-red-50 px-6 py-20 text-center">
       <div
@@ -214,18 +218,17 @@ function EventsErrorState({ onRetry }) {
         </svg>
       </div>
       <p className="text-base font-medium text-charcoal-950">
-        Unable to load events
+        {t('events.errorTitle')}
       </p>
       <p className="mt-2 max-w-sm text-sm leading-6 text-charcoal-500">
-        Something went wrong while fetching events. Please check your connection
-        and try again.
+        {t('events.errorDesc')}
       </p>
       <button
         type="button"
         onClick={onRetry}
         className="mt-6 inline-flex min-h-10 items-center justify-center rounded-md border border-bronze-700 px-5 py-2 text-sm font-semibold text-bronze-700 transition-colors hover:bg-bronze-50 hover:text-bronze-800 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-bronze-600"
       >
-        Try Again
+        {t('common.tryAgain')}
       </button>
     </div>
   );
@@ -237,6 +240,7 @@ function EventsErrorState({ onRetry }) {
 
 function Events() {
   const { settings } = useSettings();
+  const { t } = useLanguage();
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
@@ -269,7 +273,7 @@ function Events() {
     return (
       <ul
         className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3"
-        aria-label={`${settings.organizationName} events`}
+        aria-label={t('events.eventsAriaLabel', { org: settings.organizationName })}
       >
         {events.map((event) => (
           <li key={event._id}>
@@ -288,12 +292,10 @@ function Events() {
           <div className="max-w-2xl">
             <div aria-hidden="true" className="mb-6 h-1 w-14 rounded-full bg-bronze-500" />
             <h1 className="text-4xl font-bold tracking-tight text-charcoal-950 sm:text-5xl">
-              Events
+              {t('events.title')}
             </h1>
             <p className="mt-6 text-base leading-8 text-charcoal-700 sm:text-lg">
-              This page will showcase {settings.organizationName}'s community, educational, and
-              social initiatives and events. Follow our activities and find out
-              how you can get involved.
+              {t('events.subhead', { org: settings.organizationName })}
             </p>
           </div>
         </div>
@@ -310,10 +312,10 @@ function Events() {
             id="events-listing-title"
             className="text-3xl font-bold tracking-tight text-charcoal-950 sm:text-4xl"
           >
-            All Events
+            {t('events.allEventsHeading')}
           </h2>
           <p className="mt-4 text-base leading-8 text-charcoal-700 sm:text-lg">
-            Community, educational, and social initiatives organised by {settings.organizationName}.
+            {t('events.allEventsSubhead', { org: settings.organizationName })}
           </p>
 
           <div className="mt-10">{renderContent()}</div>

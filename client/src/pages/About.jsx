@@ -2,62 +2,55 @@ import { useState, useEffect } from 'react';
 import handpic from '../assets/Handpic.jpeg';
 import { fetchActiveTeamMembers } from '../services/teamService';
 import { useSettings } from '../context/SettingsContext';
+import { useLanguage } from '../context/LanguageContext';
 
-const getValues = (organizationName) => [
+const getValues = (t, organizationName) => [
   {
-    title: 'Education',
-    description:
-      'We believe access to education is fundamental. Our work focuses on removing practical barriers so that every student can pursue learning.',
+    title: t('about.values.educationTitle'),
+    description: t('about.values.educationDesc'),
     iconPath:
       'M12 6v15m0-15C9 4 5 4 2 5v14c3-1 7-1 10 2m0-15c3-2 7-2 10-1v14c-3-1-7-1-10 2',
   },
   {
-    title: 'Compassion',
-    description:
-      'We approach every initiative with care and empathy, recognising the dignity of each person and family we work alongside.',
+    title: t('about.values.compassionTitle'),
+    description: t('about.values.compassionDesc'),
     iconPath:
       'M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z',
   },
   {
-    title: 'Community',
-    description:
-      `${organizationName} is rooted in community. We work with people — not just for them — building connections and shared purpose across the areas we serve.`,
+    title: t('about.values.communityTitle'),
+    description: t('about.values.communityDesc', { org: organizationName }),
     iconPath:
       'M18 18.72a9.094 9.094 0 0 0 3.741-.479 3 3 0 0 0-4.682-2.72m.94 3.198.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0 1 12 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 0 1 6 18.719m12 0a5.971 5.971 0 0 0-.941-3.197m0 0A5.995 5.995 0 0 0 12 12.75a5.995 5.995 0 0 0-5.058 2.772m0 0a3 3 0 0 0-4.681 2.72 8.986 8.986 0 0 0 3.74.477m.94-3.197a5.971 5.971 0 0 0-.94 3.197M15 6.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm6 3a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Zm-13.5 0a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Z',
   },
   {
-    title: 'Responsibility',
-    description:
-      'We act with accountability to the communities we serve, using resources carefully and focusing on support that creates real, practical impact.',
+    title: t('about.values.responsibilityTitle'),
+    description: t('about.values.responsibilityDesc'),
     iconPath:
       'M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z',
   },
 ];
 
-const howWeWorkSteps = [
+const getHowWeWorkSteps = (t) => [
   {
     step: '01',
-    title: 'Identify Community Needs',
-    description:
-      'We listen to and observe the communities and students we serve to understand where support is most needed.',
+    title: t('about.steps.step1Title'),
+    description: t('about.steps.step1Desc'),
   },
   {
     step: '02',
-    title: 'Organise Support',
-    description:
-      'We plan appropriate responses — whether educational resources, relief supplies, or direct assistance — and coordinate what is required.',
+    title: t('about.steps.step2Title'),
+    description: t('about.steps.step2Desc'),
   },
   {
     step: '03',
-    title: 'Work With Members & Volunteers',
-    description:
-      'Our members and volunteers contribute their time, skills, and effort to make each initiative possible.',
+    title: t('about.steps.step3Title'),
+    description: t('about.steps.step3Desc'),
   },
   {
     step: '04',
-    title: 'Deliver Practical Assistance',
-    description:
-      'We carry out the work directly — providing materials, teaching, or relief — and follow through to ensure it reaches those who need it.',
+    title: t('about.steps.step4Title'),
+    description: t('about.steps.step4Desc'),
   },
 ];
 
@@ -93,6 +86,7 @@ function AvatarPlaceholder() {
  * requires only updating the data array above.
  */
 function LeadershipCard({ role, name, photo, bio }) {
+  const { t } = useLanguage();
   const hasPhoto = Boolean(photo && photo.trim());
   const hasName = Boolean(name && name.trim());
 
@@ -113,7 +107,7 @@ function LeadershipCard({ role, name, photo, bio }) {
           {hasName ? (
             name
           ) : (
-            <span className="italic text-charcoal-400">Name to be updated</span>
+            <span className="italic text-charcoal-400">{t('about.nameToBeUpdated')}</span>
           )}
         </p>
         <p className="mt-1 text-sm font-medium text-bronze-700">{role}</p>
@@ -131,10 +125,12 @@ function LeadershipCard({ role, name, photo, bio }) {
 
 function About() {
   const { settings } = useSettings();
+  const { t } = useLanguage();
   const [teamMembers, setTeamMembers] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const values = getValues(settings.organizationName);
+  const values = getValues(t, settings.organizationName);
+  const howWeWorkSteps = getHowWeWorkSteps(t);
 
   useEffect(() => {
     let isMounted = true;
@@ -169,21 +165,21 @@ function About() {
           <div className="lg:py-24">
             <div aria-hidden="true" className="mb-6 h-1 w-14 rounded-full bg-bronze-500" />
             <h1 className="text-4xl font-bold tracking-tight text-charcoal-950 sm:text-5xl">
-              About {settings.organizationName}
+              {t('about.title', { org: settings.organizationName })}
             </h1>
             <dl className="mt-6 space-y-2 text-base leading-8 text-charcoal-700 sm:text-lg">
               <div>
                 <dt className="sr-only">Type</dt>
-                <dd>Registered nonprofit organization</dd>
+                <dd>{t('common.registeredNonprofit')}</dd>
               </div>
               <div className="flex flex-wrap gap-x-2">
-                <dt className="font-medium text-charcoal-950">Established</dt>
+                <dt className="font-medium text-charcoal-950">{t('common.established')}</dt>
                 <dd>
                   <time>{settings.establishedDate}</time>
                 </dd>
               </div>
               <div className="flex flex-wrap gap-x-2">
-                <dt className="font-medium text-charcoal-950">Based in</dt>
+                <dt className="font-medium text-charcoal-950">{t('common.basedIn')}</dt>
                 <dd>{settings.location}</dd>
               </div>
             </dl>
@@ -193,7 +189,7 @@ function About() {
           <div className="relative overflow-hidden rounded-2xl lg:rounded-none lg:rounded-bl-3xl">
             <img
               src={handpic}
-              alt={`${settings.organizationName} community activity`}
+              alt={t('about.imageAlt', { org: settings.organizationName })}
               width={960}
               height={640}
               className="h-72 w-full object-cover sm:h-80 lg:h-full lg:min-h-[480px]"
@@ -218,11 +214,10 @@ function About() {
             id="leadership-title"
             className="text-3xl font-bold tracking-tight text-charcoal-950 sm:text-4xl"
           >
-            Our Leadership
+            {t('about.leadershipHeading')}
           </h2>
           <p className="mt-4 max-w-2xl text-base leading-8 text-charcoal-700 sm:text-lg">
-            {settings.organizationName} is led by a dedicated team committed to the organization's
-            mission and the communities it serves.
+            {t('about.leadershipText', { org: settings.organizationName })}
           </p>
 
           {loading ? (
@@ -242,12 +237,12 @@ function About() {
             </div>
           ) : activeMembers.length === 0 ? (
             <p className="mt-10 text-center text-sm italic text-charcoal-500">
-              Leadership information will be updated soon.
+              {t('about.leadershipEmpty')}
             </p>
           ) : (
             <ul
               className="mt-10 grid gap-6 sm:grid-cols-3"
-              aria-label="Leadership team"
+              aria-label={t('about.leadershipTeamAria')}
             >
               {activeMembers.map((member) => (
                 <li key={member._id || member.id}>
@@ -270,16 +265,15 @@ function About() {
             id="values-title"
             className="text-3xl font-bold tracking-tight text-charcoal-950 sm:text-4xl"
           >
-            Our Values
+            {t('about.valuesHeading')}
           </h2>
           <p className="mt-4 max-w-2xl text-base leading-8 text-charcoal-700 sm:text-lg">
-            These values guide how we work and how we relate to the communities
-            and individuals we support.
+            {t('about.valuesSubhead')}
           </p>
 
           <ul
             className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4"
-            aria-label={`${settings.organizationName} values`}
+            aria-label={t('about.valuesAriaLabel', { org: settings.organizationName })}
           >
             {values.map(({ title, description, iconPath }) => (
               <li
@@ -320,15 +314,15 @@ function About() {
             id="how-we-work-title"
             className="text-3xl font-bold tracking-tight text-charcoal-950 sm:text-4xl"
           >
-            How We Work
+            {t('about.howWeWorkHeading')}
           </h2>
           <p className="mt-4 max-w-2xl text-base leading-8 text-charcoal-700 sm:text-lg">
-            Our approach is straightforward and grounded in direct action.
+            {t('about.howWeWorkSubhead')}
           </p>
 
           <ol
             className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4"
-            aria-label={`How ${settings.organizationName} works`}
+            aria-label={t('about.howWeWorkAriaLabel', { org: settings.organizationName })}
           >
             {howWeWorkSteps.map(({ step, title, description }) => (
               <li

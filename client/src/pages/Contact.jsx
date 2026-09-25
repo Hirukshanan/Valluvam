@@ -2,6 +2,7 @@ import { useState, useRef } from 'react';
 import { submitContactMessage } from '../services/contactService';
 import Turnstile from '../components/Turnstile';
 import { useSettings } from '../context/SettingsContext';
+import { useLanguage } from '../context/LanguageContext';
 
 const fieldClassName =
   'mt-2 block w-full rounded-md border border-charcoal-300 bg-white px-4 py-3 text-base text-charcoal-950 transition-colors focus-visible:border-bronze-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-bronze-600 disabled:opacity-60 disabled:cursor-not-allowed';
@@ -18,6 +19,7 @@ const initialForm = {
 
 function Contact() {
   const { settings } = useSettings();
+  const { t } = useLanguage();
   const [form, setForm] = useState(initialForm);
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -28,32 +30,32 @@ function Contact() {
   function validate() {
     const errs = {};
     if (!form.name.trim()) {
-      errs.name = 'Full name is required';
+      errs.name = t('contact.validation.nameRequired');
     }
     if (!form.email.trim()) {
-      errs.email = 'Email address is required';
+      errs.email = t('contact.validation.emailRequired');
     } else {
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(form.email.trim())) {
-        errs.email = 'Please provide a valid email address';
+        errs.email = t('contact.validation.emailInvalid');
       }
     }
 
     if (form.preferredContactMethod === 'whatsapp') {
       if (!form.whatsappNumber.trim()) {
-        errs.whatsappNumber = 'WhatsApp number is required when WhatsApp is selected';
+        errs.whatsappNumber = t('contact.validation.whatsappRequired');
       }
     } else if (form.preferredContactMethod === 'phone') {
       if (!form.phoneNumber.trim()) {
-        errs.phoneNumber = 'Phone number is required when Phone is selected';
+        errs.phoneNumber = t('contact.validation.phoneRequired');
       }
     }
 
     if (!form.subject.trim()) {
-      errs.subject = 'Subject is required';
+      errs.subject = t('contact.validation.subjectRequired');
     }
     if (!form.message.trim()) {
-      errs.message = 'Message is required';
+      errs.message = t('contact.validation.messageRequired');
     }
     return errs;
   }
@@ -113,7 +115,7 @@ function Contact() {
       token = await turnstileRef.current?.execute();
     } catch (turnstileErr) {
       setServerError(
-        turnstileErr.message || 'Security verification failed. Please try again.'
+        turnstileErr.message || t('contact.validation.securityFailed')
       );
       turnstileRef.current?.reset();
       setIsSubmitting(false);
@@ -121,7 +123,7 @@ function Contact() {
     }
 
     if (!token) {
-      setServerError('Security verification could not be completed. Please try again.');
+      setServerError(t('contact.validation.securityIncomplete'));
       turnstileRef.current?.reset();
       setIsSubmitting(false);
       return;
@@ -150,7 +152,7 @@ function Contact() {
       turnstileRef.current?.reset();
     } catch (err) {
       setServerError(
-        err.message || 'Something went wrong while sending your message. Please try again.'
+        err.message || t('contact.validation.generalError')
       );
       turnstileRef.current?.reset();
     } finally {
@@ -165,11 +167,10 @@ function Contact() {
           <div className="max-w-2xl">
             <div aria-hidden="true" className="mb-6 h-1 w-14 rounded-full bg-bronze-500" />
             <h1 className="text-4xl font-bold tracking-tight text-charcoal-950 sm:text-5xl">
-              Contact Us
+              {t('contact.title')}
             </h1>
             <p className="mt-6 text-base leading-8 text-charcoal-700 sm:text-lg">
-              Get in touch with {settings.organizationName} for general enquiries, volunteering,
-              community support, or collaboration enquiries.
+              {t('contact.subhead', { org: settings.organizationName })}
             </p>
           </div>
         </div>
@@ -181,11 +182,11 @@ function Contact() {
             id="contact-details-title"
             className="text-2xl font-semibold text-charcoal-950"
           >
-            Contact details
+            {t('contact.detailsHeading')}
           </h2>
           <dl className="mt-6 space-y-6 rounded-xl border border-bronze-100 bg-bronze-50 p-6 sm:p-8">
             <div>
-              <dt className="text-sm font-semibold text-charcoal-950">Email</dt>
+              <dt className="text-sm font-semibold text-charcoal-950">{t('contact.emailLabel')}</dt>
               <dd className="mt-2 text-base leading-7">
                 <a
                   href={`mailto:${settings.email}`}
@@ -196,7 +197,7 @@ function Contact() {
               </dd>
             </div>
             <div>
-              <dt className="text-sm font-semibold text-charcoal-950">Location</dt>
+              <dt className="text-sm font-semibold text-charcoal-950">{t('contact.locationLabel')}</dt>
               <dd className="mt-2 text-base leading-7 text-charcoal-700">
                 {settings.location}
               </dd>
@@ -209,10 +210,10 @@ function Contact() {
             id="contact-form-title"
             className="text-2xl font-semibold text-charcoal-950"
           >
-            Send a message
+            {t('contact.formHeading')}
           </h2>
           <p id="contact-form-required" className="mt-2 text-sm text-charcoal-700">
-            All displayed fields are required.
+            {t('contact.requiredNote')}
           </p>
 
           {/* Success banner */}
@@ -235,9 +236,9 @@ function Contact() {
                   />
                 </svg>
                 <div>
-                  <p className="text-sm font-semibold">Thank you for getting in touch!</p>
+                  <p className="text-sm font-semibold">{t('contact.successTitle')}</p>
                   <p className="mt-1 text-sm text-emerald-700">
-                    Your message has been sent successfully. Our team will review your enquiry and respond to you as soon as possible.
+                    {t('contact.successDesc')}
                   </p>
                 </div>
               </div>
@@ -271,7 +272,7 @@ function Contact() {
                   onClick={() => setServerError('')}
                   className="ml-auto text-xs font-semibold text-red-700 hover:underline"
                 >
-                  Dismiss
+                  {t('common.dismiss')}
                 </button>
               </div>
             </div>
@@ -286,7 +287,7 @@ function Contact() {
           >
             <div>
               <label htmlFor="contact-name" className="block text-sm font-semibold text-charcoal-950">
-                Full Name
+                {t('contact.nameLabel')}
               </label>
               <input
                 id="contact-name"
@@ -308,7 +309,7 @@ function Contact() {
 
             <div>
               <label htmlFor="contact-email" className="block text-sm font-semibold text-charcoal-950">
-                Email Address
+                {t('contact.emailInputLabel')}
               </label>
               <input
                 id="contact-email"
@@ -330,13 +331,13 @@ function Contact() {
 
             <fieldset className="w-full min-w-0 rounded-xl border border-bronze-100 bg-bronze-50 p-6 pt-6 sm:p-5 sm:pt-7">
               <legend className="float-left w-full mb-2 px-2 text-base font-semibold text-charcoal-950">
-                How can we reach you?
+                {t('contact.reachMethodLegend')}
               </legend>
               <div className="flex w-full flex-wrap gap-x-6 gap-y-2">
                 {[
-                  { value: 'email', label: 'Email' },
-                  { value: 'whatsapp', label: 'WhatsApp' },
-                  { value: 'phone', label: 'Phone' },
+                  { value: 'email', label: t('contact.methodEmail') },
+                  { value: 'whatsapp', label: t('contact.methodWhatsapp') },
+                  { value: 'phone', label: t('contact.methodPhone') },
                 ].map(({ value, label }) => (
                   <label
                     key={value}
@@ -359,7 +360,7 @@ function Contact() {
 
               {form.preferredContactMethod === 'email' ? (
                 <p className="mt-3 text-sm leading-6 text-charcoal-700">
-                  Uses the Email Address entered above.
+                  {t('contact.emailMethodNote')}
                 </p>
               ) : (
                 <div className="mt-4">
@@ -367,7 +368,7 @@ function Contact() {
                     htmlFor={`contact-${form.preferredContactMethod}-number`}
                     className="block text-sm font-semibold text-charcoal-950"
                   >
-                    {form.preferredContactMethod === 'whatsapp' ? 'WhatsApp Number' : 'Phone Number'}
+                    {form.preferredContactMethod === 'whatsapp' ? t('contact.whatsappNumberLabel') : t('contact.phoneNumberLabel')}
                   </label>
                   <input
                     key={form.preferredContactMethod}
@@ -402,7 +403,7 @@ function Contact() {
 
             <div>
               <label htmlFor="contact-subject" className="block text-sm font-semibold text-charcoal-950">
-                Subject
+                {t('contact.subjectLabel')}
               </label>
               <input
                 id="contact-subject"
@@ -423,7 +424,7 @@ function Contact() {
 
             <div>
               <label htmlFor="contact-message" className="block text-sm font-semibold text-charcoal-950">
-                Message
+                {t('contact.messageLabel')}
               </label>
               <textarea
                 id="contact-message"
@@ -459,10 +460,10 @@ function Contact() {
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
                   </svg>
-                  Sending message…
+                  {t('contact.submittingButton')}
                 </>
               ) : (
-                'Send Message'
+                t('contact.submitButton')
               )}
             </button>
           </form>
