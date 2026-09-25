@@ -237,11 +237,8 @@ function AlbumViewerModal({ album, onClose }) {
         : [];
 
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [photoError, setPhotoError] = useState(false);
-
-  useEffect(() => {
-    setPhotoError(false);
-  }, [currentIndex]);
+  const [photoErrorIndex, setPhotoErrorIndex] = useState(null);
+  const isPhotoError = photoErrorIndex === currentIndex;
 
   const totalPhotos = photos.length;
   const currentPhoto = photos[currentIndex];
@@ -343,13 +340,13 @@ function AlbumViewerModal({ album, onClose }) {
         )}
 
         {/* Current Large Photo */}
-        {currentPhoto?.imageUrl && !photoError ? (
+        {currentPhoto?.imageUrl && !isPhotoError ? (
           <div className="flex h-full w-full items-center justify-center">
             <img
               src={currentPhoto.imageUrl}
               alt={`${album.title} - photo ${currentIndex + 1}`}
               decoding="async"
-              onError={() => setPhotoError(true)}
+              onError={() => setPhotoErrorIndex(currentIndex)}
               className="max-h-[68vh] sm:max-h-[75vh] max-w-full w-auto h-auto object-contain rounded-lg shadow-2xl select-none"
             />
           </div>
