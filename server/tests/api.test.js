@@ -56,6 +56,31 @@ async function runTestSuite() {
     assert(data.success === true, 'Expected success: true');
   });
 
+  await test('GET /health returns expected security headers (Helmet)', async () => {
+    const res = await fetch(`${baseUrl}/health`);
+    assert(res.headers.get('x-content-type-options') === 'nosniff', 'Expected X-Content-Type-Options: nosniff');
+    assert(res.headers.get('x-frame-options') === 'SAMEORIGIN', 'Expected X-Frame-Options: SAMEORIGIN');
+    assert(res.headers.get('cross-origin-resource-policy') === 'cross-origin', 'Expected Cross-Origin-Resource-Policy: cross-origin');
+    assert(res.headers.get('x-powered-by') === null, 'Expected X-Powered-By to be removed');
+    const csp = res.headers.get('content-security-policy');
+    assert(csp && csp.includes('challenges.cloudflare.com'), 'Expected CSP to allow Cloudflare Turnstile');
+    assert(csp && csp.includes('res.cloudinary.com'), 'Expected CSP to allow Cloudinary');
+  });
+
+  await test('OPTIONS /health returns CORS headers alongside security headers', async () => {
+    const res = await fetch(`${baseUrl}/health`, {
+      method: 'OPTIONS',
+      headers: {
+        Origin: 'http://localhost:5173',
+        'Access-Control-Request-Method': 'GET',
+      },
+    });
+    assert(res.status === 204, `Expected 204, got ${res.status}`);
+    assert(res.headers.get('access-control-allow-origin') === 'http://localhost:5173', 'Expected CORS allow origin');
+    assert(res.headers.get('x-content-type-options') === 'nosniff', 'Expected nosniff on OPTIONS');
+    assert(res.headers.get('cross-origin-resource-policy') === 'cross-origin', 'Expected CORP on OPTIONS');
+  });
+
   await test('GET /nonexistent returns 404 JSON (not HTML)', async () => {
     const res = await fetch(`${baseUrl}/nonexistent-route-check`);
     const data = await res.json();
