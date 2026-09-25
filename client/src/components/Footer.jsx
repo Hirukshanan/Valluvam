@@ -1,22 +1,24 @@
 import { Link } from 'react-router-dom';
 import { useSettings } from '../context/SettingsContext';
-
-const quickLinks = [
-  { label: 'Home', to: '/' },
-  { label: 'About Us', to: '/about' },
-  { label: 'Our Work', to: '/our-work' },
-  { label: 'Events', to: '/events' },
-  { label: 'Gallery', to: '/gallery' },
-  { label: 'Volunteer', to: '/volunteer' },
-  { label: 'Support Us', to: '/support' },
-  { label: 'Contact', to: '/contact' },
-];
+import { useLanguage } from '../context/LanguageContext';
 
 const linkClassName =
   'rounded-sm text-charcoal-700 hover:text-bronze-700 hover:underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-bronze-600';
 
 function Footer() {
   const { settings } = useSettings();
+  const { t } = useLanguage();
+
+  const quickLinks = [
+    { label: t('navbar.home'), to: '/' },
+    { label: t('navbar.aboutUs'), to: '/about' },
+    { label: t('navbar.ourWork'), to: '/our-work' },
+    { label: t('navbar.events'), to: '/events' },
+    { label: t('navbar.gallery'), to: '/gallery' },
+    { label: t('navbar.volunteer'), to: '/volunteer' },
+    { label: t('navbar.supportUs'), to: '/support' },
+    { label: t('navbar.contact'), to: '/contact' },
+  ];
 
   return (
     <footer className="border-t border-bronze-100 bg-bronze-50 text-charcoal-700">
@@ -27,12 +29,12 @@ function Footer() {
               {settings.organizationName}
             </h2>
             <p className="mt-4 max-w-sm text-sm leading-7">
-              Supporting students, families, and communities through education and social service.
+              {t('footer.tagline')}
             </p>
           </div>
 
           <nav aria-label="Footer navigation">
-            <h2 className="text-base font-semibold text-charcoal-950">Quick Links</h2>
+            <h2 className="text-base font-semibold text-charcoal-950">{t('footer.quickLinks')}</h2>
             <ul className="mt-4 grid grid-cols-2 gap-x-6 gap-y-3 text-sm">
               {quickLinks.map(({ label, to }) => (
                 <li key={to}>
@@ -45,22 +47,22 @@ function Footer() {
           </nav>
 
           <div>
-            <h2 className="text-base font-semibold text-charcoal-950">Contact</h2>
+            <h2 className="text-base font-semibold text-charcoal-950">{t('footer.contact')}</h2>
             <address className="mt-4 space-y-3 text-sm not-italic leading-7">
               <p>
-                <span className="font-medium text-charcoal-950">Email: </span>
+                <span className="font-medium text-charcoal-950">{t('common.email')}: </span>
                 <a href={`mailto:${settings.email}`} className={`${linkClassName} break-words`}>
                   {settings.email}
                 </a>
               </p>
               <p>
-                <span className="font-medium text-charcoal-950">Location: </span>
+                <span className="font-medium text-charcoal-950">{t('common.location')}: </span>
                 {settings.location}
               </p>
             </address>
 
             <div className="mt-6">
-              <h2 className="text-base font-semibold text-charcoal-950">Follow Us</h2>
+              <h2 className="text-base font-semibold text-charcoal-950">{t('footer.followUs')}</h2>
               <ul className="mt-3 flex flex-wrap gap-x-5 gap-y-3 text-sm">
                 {settings.facebookUrl && (
                   <li>
@@ -70,7 +72,7 @@ function Footer() {
                       rel="noopener noreferrer"
                       className={linkClassName}
                     >
-                      Facebook<span className="sr-only"> (opens in a new tab)</span>
+                      Facebook<span className="sr-only"> {t('common.opensInNewTab')}</span>
                     </a>
                   </li>
                 )}
@@ -82,7 +84,7 @@ function Footer() {
                       rel="noopener noreferrer"
                       className={linkClassName}
                     >
-                      Instagram<span className="sr-only"> (opens in a new tab)</span>
+                      Instagram<span className="sr-only"> {t('common.opensInNewTab')}</span>
                     </a>
                   </li>
                 )}
@@ -92,7 +94,7 @@ function Footer() {
         </div>
 
         <div className="border-t border-bronze-200 py-5 text-center text-sm">
-          © {settings.organizationName}. All rights reserved.
+          {t('footer.copyright', { org: settings.organizationName })}
         </div>
       </div>
     </footer>
