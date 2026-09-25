@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { fetchSettings, updateSettings } from '../services/adminSettingsService';
+import { useSettings } from '../context/SettingsContext';
 
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -55,6 +56,7 @@ function Toast({ message, onClose }) {
 }
 
 function AdminSettings() {
+  const { refreshSettings } = useSettings();
   const [form, setForm] = useState(initialSettingsState);
   const [originalForm, setOriginalForm] = useState(initialSettingsState);
   const [loading, setLoading] = useState(true);
@@ -198,6 +200,7 @@ function AdminSettings() {
         setLastUpdated(updated.updatedAt);
       }
       setToastMessage('Organization settings updated successfully.');
+      refreshSettings();
     } catch (err) {
       setServerError(err.message || 'Failed to update organization settings');
     } finally {

@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 
 import { AuthProvider } from './context/AuthContext';
+import { SettingsProvider } from './context/SettingsContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import AdminLayout from './components/AdminLayout';
 
@@ -49,31 +50,33 @@ function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <Routes>
-          {/* Admin login — no layout chrome */}
-          <Route path="/admin/login" element={<AdminLogin />} />
+        <SettingsProvider>
+          <Routes>
+            {/* Admin login — no layout chrome */}
+            <Route path="/admin/login" element={<AdminLogin />} />
 
-          {/* Admin area — wrapped in layout + route protection */}
-          <Route
-            path="/admin"
-            element={
-              <ProtectedRoute>
-                <AdminLayout />
-              </ProtectedRoute>
-            }
-          >
-            <Route index element={<AdminDashboard />} />
-            <Route path="events" element={<AdminEvents />} />
-            <Route path="gallery" element={<AdminGallery />} />
-            <Route path="team" element={<AdminTeam />} />
-            <Route path="volunteers" element={<AdminVolunteers />} />
-            <Route path="messages" element={<AdminMessages />} />
-            <Route path="settings" element={<AdminSettings />} />
-          </Route>
+            {/* Admin area — wrapped in layout + route protection */}
+            <Route
+              path="/admin"
+              element={
+                <ProtectedRoute>
+                  <AdminLayout />
+                </ProtectedRoute>
+              }
+            >
+              <Route index element={<AdminDashboard />} />
+              <Route path="events" element={<AdminEvents />} />
+              <Route path="gallery" element={<AdminGallery />} />
+              <Route path="team" element={<AdminTeam />} />
+              <Route path="volunteers" element={<AdminVolunteers />} />
+              <Route path="messages" element={<AdminMessages />} />
+              <Route path="settings" element={<AdminSettings />} />
+            </Route>
 
-          {/* Public routes — with Navbar + Footer */}
-          <Route path="/*" element={<PublicLayout />} />
-        </Routes>
+            {/* Public routes — with Navbar + Footer */}
+            <Route path="/*" element={<PublicLayout />} />
+          </Routes>
+        </SettingsProvider>
       </AuthProvider>
     </BrowserRouter>
   );

@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react';
 import { submitContactMessage } from '../services/contactService';
 import Turnstile from '../components/Turnstile';
+import { useSettings } from '../context/SettingsContext';
 
 const fieldClassName =
   'mt-2 block w-full rounded-md border border-charcoal-300 bg-white px-4 py-3 text-base text-charcoal-950 transition-colors focus-visible:border-bronze-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-bronze-600 disabled:opacity-60 disabled:cursor-not-allowed';
@@ -16,6 +17,7 @@ const initialForm = {
 };
 
 function Contact() {
+  const { settings } = useSettings();
   const [form, setForm] = useState(initialForm);
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -166,7 +168,7 @@ function Contact() {
               Contact Us
             </h1>
             <p className="mt-6 text-base leading-8 text-charcoal-700 sm:text-lg">
-              Get in touch with Valluvam for general enquiries, volunteering,
+              Get in touch with {settings.organizationName} for general enquiries, volunteering,
               community support, or collaboration enquiries.
             </p>
           </div>
@@ -186,17 +188,17 @@ function Contact() {
               <dt className="text-sm font-semibold text-charcoal-950">Email</dt>
               <dd className="mt-2 text-base leading-7">
                 <a
-                  href="mailto:valluvamofficial@gmail.com"
+                  href={`mailto:${settings.email}`}
                   className="wrap-anywhere rounded-sm text-bronze-700 underline decoration-bronze-300 underline-offset-4 hover:text-bronze-800 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-bronze-600"
                 >
-                  valluvamofficial@gmail.com
+                  {settings.email}
                 </a>
               </dd>
             </div>
             <div>
               <dt className="text-sm font-semibold text-charcoal-950">Location</dt>
               <dd className="mt-2 text-base leading-7 text-charcoal-700">
-                Pandiruppu, Kalmunai, Ampara District, Sri Lanka
+                {settings.location}
               </dd>
             </div>
           </dl>

@@ -1,10 +1,11 @@
 import { Link } from 'react-router-dom';
+import { useSettings } from '../context/SettingsContext';
 
-const workAreas = [
+const getWorkAreas = (organizationName) => [
   {
     title: 'Educational Resources',
     description:
-      'Valluvam provides free past papers and educational materials to students, helping them prepare for exams and access learning opportunities that may otherwise be out of reach.',
+      `${organizationName} provides free past papers and educational materials to students, helping them prepare for exams and access learning opportunities that may otherwise be out of reach.`,
     iconPath:
       'M12 6v15m0-15C9 4 5 4 2 5v14c3-1 7-1 10 2m0-15c3-2 7-2 10-1v14c-3-1-7-1-10 2',
   },
@@ -25,20 +26,22 @@ const workAreas = [
   {
     title: 'Rural Education',
     description:
-      'Valluvam works directly in rural communities, teaching and supporting students in schools and areas where educational resources and opportunities are limited.',
+      `${organizationName} works directly in rural communities, teaching and supporting students in schools and areas where educational resources and opportunities are limited.`,
     iconPath:
       'm3 10 9-7 9 7M5 9v12h14V9M10 21v-6h4v6M8 11h1m6 0h1M12 3V1',
   },
   {
     title: 'Community Relief',
     description:
-      'During natural disasters and difficult periods, Valluvam provides food and essential items to families and communities in need, offering support when it matters most.',
+      `During natural disasters and difficult periods, ${organizationName} provides food and essential items to families and communities in need, offering support when it matters most.`,
     iconPath:
       'm3 7 9-4 9 4v12l-9 3-9-3V7Zm0 0 9 4 9-4M12 11v11M7.5 5l9 4v5',
   },
 ];
 
 function OurWork() {
+  const { settings } = useSettings();
+  const workAreas = getWorkAreas(settings.organizationName);
   return (
     <main>
       {/* Page header */}
@@ -50,7 +53,7 @@ function OurWork() {
               Our Work
             </h1>
             <p className="mt-6 text-base leading-8 text-charcoal-700 sm:text-lg">
-              Valluvam focuses on practical educational and community support for
+              {settings.organizationName} focuses on practical educational and community support for
               students, families, and communities. Our work is grounded in
               identifying real needs and responding with direct, meaningful action.
             </p>
@@ -78,7 +81,7 @@ function OurWork() {
 
           <ul
             className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3"
-            aria-label="Valluvam work areas"
+            aria-label={`${settings.organizationName} work areas`}
           >
             {workAreas.map(({ title, description, iconPath }) => (
               <li
@@ -126,7 +129,7 @@ function OurWork() {
               See how you can get involved
             </h2>
             <p className="mt-6 text-base leading-8 text-charcoal-700 sm:text-lg">
-              Valluvam's work is made possible by people who choose to give their
+              {settings.organizationName}'s work is made possible by people who choose to give their
               time and skills to the community. If you'd like to be part of that,
               we'd be glad to hear from you.
             </p>

@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { useSettings } from '../context/SettingsContext';
 import backdrop from '../assets/Backdrop.jpg';
 
 const activityAreas = [
@@ -25,6 +26,8 @@ const activityAreas = [
 ];
 
 function Home() {
+  const { settings } = useSettings();
+
   return (
     <main>
       <section
@@ -53,14 +56,14 @@ function Home() {
               id="hero-title"
               className="mt-4 text-5xl font-bold tracking-tight text-white sm:text-6xl lg:text-7xl"
             >
-              Valluvam
+              {settings.organizationName}
             </h1>
             <div aria-hidden="true" className="my-7 h-1 w-14 rounded-full bg-bronze-300" />
             <p className="max-w-xl text-2xl font-medium leading-snug tracking-tight text-white sm:text-3xl">
-              “Let all your thoughts be set on high aspirations.”
+              “{settings.slogan}”
             </p>
             <p className="mt-6 max-w-xl text-base leading-8 text-white/90 sm:text-lg">
-              Valluvam supports students, children, low-income families, and rural
+              {settings.organizationName} supports students, children, low-income families, and rural
               communities through education, resources, and social service initiatives.
             </p>
 
@@ -80,7 +83,7 @@ function Home() {
             </div>
 
             <p className="mt-8 text-sm leading-6 text-white/80">
-              Pandiruppu, Kalmunai, Ampara District, Sri Lanka
+              {settings.location}
             </p>
           </div>
 
@@ -101,9 +104,8 @@ function Home() {
               Who We Are
             </h2>
             <p className="mt-6 text-base leading-8 text-charcoal-700 sm:text-lg">
-              Valluvam is a registered nonprofit organization established on{' '}
-              <time dateTime="2025-03-28">28 March 2025</time> in Pandiruppu,
-              Kalmunai. It was created with a commitment to make education and
+              {settings.organizationName} is a registered nonprofit organization established on{' '}
+              <time>{settings.establishedDate}</time> in {settings.location}. It was created with a commitment to make education and
               community support more accessible to people who need it most.
             </p>
             <p className="mt-4 text-base leading-8 text-charcoal-700 sm:text-lg">
@@ -180,14 +182,14 @@ function Home() {
             Get Involved
           </h2>
           <p className="mt-4 text-base leading-8 text-charcoal-700 sm:text-lg">
-            Support Valluvam in practical ways by giving your time, skills, or resources.
+            Support {settings.organizationName} in practical ways by giving your time, skills, or resources.
           </p>
 
           <div className="mt-10 grid gap-6 md:grid-cols-2">
             <div className="flex flex-col rounded-xl border border-bronze-100 bg-bronze-50 p-6 sm:p-8">
               <h3 className="text-2xl font-semibold text-charcoal-950">Volunteer</h3>
               <p className="mt-3 text-base leading-7 text-charcoal-700">
-                Contribute your time and skills to support Valluvam activities.
+                Contribute your time and skills to support {settings.organizationName} activities.
               </p>
               <div className="mt-auto pt-6">
                 <Link
@@ -200,9 +202,9 @@ function Home() {
             </div>
 
             <div className="flex flex-col rounded-xl border border-bronze-100 bg-bronze-50 p-6 sm:p-8">
-              <h3 className="text-2xl font-semibold text-charcoal-950">Support Valluvam</h3>
+              <h3 className="text-2xl font-semibold text-charcoal-950">Support {settings.organizationName}</h3>
               <p className="mt-3 text-base leading-7 text-charcoal-700">
-                Help sustain Valluvam's educational and community initiatives with your support.
+                Help sustain {settings.organizationName}'s educational and community initiatives with your support.
               </p>
               <div className="mt-auto pt-6">
                 <Link

@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import handpic from '../assets/Handpic.jpeg';
 import { fetchActiveTeamMembers } from '../services/teamService';
+import { useSettings } from '../context/SettingsContext';
 
-const values = [
+const getValues = (organizationName) => [
   {
     title: 'Education',
     description:
@@ -20,7 +21,7 @@ const values = [
   {
     title: 'Community',
     description:
-      'Valluvam is rooted in community. We work with people — not just for them — building connections and shared purpose across the areas we serve.',
+      `${organizationName} is rooted in community. We work with people — not just for them — building connections and shared purpose across the areas we serve.`,
     iconPath:
       'M18 18.72a9.094 9.094 0 0 0 3.741-.479 3 3 0 0 0-4.682-2.72m.94 3.198.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0 1 12 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 0 1 6 18.719m12 0a5.971 5.971 0 0 0-.941-3.197m0 0A5.995 5.995 0 0 0 12 12.75a5.995 5.995 0 0 0-5.058 2.772m0 0a3 3 0 0 0-4.681 2.72 8.986 8.986 0 0 0 3.74.477m.94-3.197a5.971 5.971 0 0 0-.94 3.197M15 6.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm6 3a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Zm-13.5 0a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Z',
   },
@@ -129,8 +130,11 @@ function LeadershipCard({ role, name, photo, bio }) {
 // ---------------------------------------------------------------------------
 
 function About() {
+  const { settings } = useSettings();
   const [teamMembers, setTeamMembers] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  const values = getValues(settings.organizationName);
 
   useEffect(() => {
     let isMounted = true;
@@ -165,7 +169,7 @@ function About() {
           <div className="lg:py-24">
             <div aria-hidden="true" className="mb-6 h-1 w-14 rounded-full bg-bronze-500" />
             <h1 className="text-4xl font-bold tracking-tight text-charcoal-950 sm:text-5xl">
-              About Valluvam
+              About {settings.organizationName}
             </h1>
             <dl className="mt-6 space-y-2 text-base leading-8 text-charcoal-700 sm:text-lg">
               <div>
@@ -175,12 +179,12 @@ function About() {
               <div className="flex flex-wrap gap-x-2">
                 <dt className="font-medium text-charcoal-950">Established</dt>
                 <dd>
-                  <time dateTime="2025-03-28">28 March 2025</time>
+                  <time>{settings.establishedDate}</time>
                 </dd>
               </div>
               <div className="flex flex-wrap gap-x-2">
                 <dt className="font-medium text-charcoal-950">Based in</dt>
-                <dd>Pandiruppu, Kalmunai, Ampara District, Sri Lanka</dd>
+                <dd>{settings.location}</dd>
               </div>
             </dl>
           </div>
@@ -189,7 +193,7 @@ function About() {
           <div className="relative overflow-hidden rounded-2xl lg:rounded-none lg:rounded-bl-3xl">
             <img
               src={handpic}
-              alt="Valluvam community activity"
+              alt={`${settings.organizationName} community activity`}
               width={960}
               height={640}
               className="h-72 w-full object-cover sm:h-80 lg:h-full lg:min-h-[480px]"
@@ -217,7 +221,7 @@ function About() {
             Our Leadership
           </h2>
           <p className="mt-4 max-w-2xl text-base leading-8 text-charcoal-700 sm:text-lg">
-            Valluvam is led by a dedicated team committed to the organization's
+            {settings.organizationName} is led by a dedicated team committed to the organization's
             mission and the communities it serves.
           </p>
 
@@ -275,7 +279,7 @@ function About() {
 
           <ul
             className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4"
-            aria-label="Valluvam values"
+            aria-label={`${settings.organizationName} values`}
           >
             {values.map(({ title, description, iconPath }) => (
               <li
@@ -324,7 +328,7 @@ function About() {
 
           <ol
             className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4"
-            aria-label="How Valluvam works"
+            aria-label={`How ${settings.organizationName} works`}
           >
             {howWeWorkSteps.map(({ step, title, description }) => (
               <li

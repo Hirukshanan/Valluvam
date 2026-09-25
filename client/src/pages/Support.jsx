@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
+import { useSettings } from '../context/SettingsContext';
 
-const supportOptions = [
+const getSupportOptions = (organizationName) => [
   {
     title: 'Support a Student',
     description:
@@ -18,14 +19,14 @@ const supportOptions = [
   {
     title: 'Sponsor an Initiative',
     description:
-      'Partner with Valluvam to sponsor a specific programme or community initiative, helping us plan and deliver more impactful activities.',
+      `Partner with ${organizationName} to sponsor a specific programme or community initiative, helping us plan and deliver more impactful activities.`,
     iconPath:
       'M11.48 3.499a.562.562 0 0 1 1.04 0l2.125 5.111a.563.563 0 0 0 .475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 0 0-.182.557l1.285 5.385a.562.562 0 0 1-.84.61l-4.725-2.885a.562.562 0 0 0-.586 0L6.982 20.54a.562.562 0 0 1-.84-.61l1.285-5.386a.562.562 0 0 0-.182-.557L3.04 10.405a.562.562 0 0 1 .321-.988l5.518-.442a.563.563 0 0 0 .475-.345L11.48 3.5Z',
   },
   {
     title: 'Volunteer Your Time',
     description:
-      'Share your skills, knowledge, or energy by volunteering with Valluvam. Every hour of your time contributes to a stronger community.',
+      `Share your skills, knowledge, or energy by volunteering with ${organizationName}. Every hour of your time contributes to a stronger community.`,
     iconPath:
       'M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z',
   },
@@ -39,6 +40,8 @@ const supportOptions = [
 ];
 
 function Support() {
+  const { settings } = useSettings();
+  const supportOptions = getSupportOptions(settings.organizationName);
   return (
     <main>
       {/* Page header */}
@@ -47,10 +50,10 @@ function Support() {
           <div className="max-w-2xl">
             <div aria-hidden="true" className="mb-6 h-1 w-14 rounded-full bg-bronze-500" />
             <h1 className="text-4xl font-bold tracking-tight text-charcoal-950 sm:text-5xl">
-              Support Valluvam
+              Support {settings.organizationName}
             </h1>
             <p className="mt-6 text-base leading-8 text-charcoal-700 sm:text-lg">
-              Supporting Valluvam doesn't have to mean a single act. There are many
+              Supporting {settings.organizationName} doesn't have to mean a single act. There are many
               ways to contribute — your time, knowledge, resources, or presence can
               all make a meaningful difference to the students and communities we serve.
             </p>
@@ -73,7 +76,7 @@ function Support() {
           </h2>
           <p className="mt-4 max-w-2xl text-base leading-8 text-charcoal-700 sm:text-lg">
             Whether you can offer your time, expertise, or resources, there is a
-            meaningful way for you to be part of Valluvam's work.
+            meaningful way for you to be part of {settings.organizationName}'s work.
           </p>
 
           <ul
@@ -123,7 +126,7 @@ function Support() {
               id="support-cta-title"
               className="text-3xl font-bold tracking-tight text-charcoal-950 sm:text-4xl"
             >
-              Want to support Valluvam?
+              Want to support {settings.organizationName}?
             </h2>
             <p className="mt-6 text-base leading-8 text-charcoal-700 sm:text-lg">
               We'd love to hear from you. Reach out to us and we can discuss how
