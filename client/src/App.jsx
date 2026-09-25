@@ -8,6 +8,7 @@ import AdminLayout from './components/AdminLayout';
 
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
+import ScrollToTop from './components/ScrollToTop';
 import Home from './pages/Home';
 import About from './pages/About';
 import OurWork from './pages/OurWork';
@@ -31,6 +32,7 @@ import AdminSupport from './pages/AdminSupport';
 function PublicLayout() {
   return (
     <>
+      <ScrollToTop />
       <Navbar />
       <Routes>
         <Route path="/" element={<Home />} />
