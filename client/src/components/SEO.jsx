@@ -1,6 +1,8 @@
 import { useEffect } from 'react';
 import { useSettings } from '../context/SettingsContext';
 
+const DEFAULT_ORIGIN = 'https://valluvam.org';
+
 /**
  * Reusable SEO component for managing document head metadata across public pages:
  * - document.title
@@ -9,8 +11,10 @@ import { useSettings } from '../context/SettingsContext';
  * - <meta property="og:title">
  * - <meta property="og:description">
  * - <meta property="og:type">
+ * - <meta property="og:url">
+ * - <meta property="og:image">
  */
-export function SEO({ title, description, robots = 'index, follow' }) {
+export function SEO({ title, description, robots = 'index, follow', url, image }) {
   const { settings } = useSettings();
   const orgName = settings?.organizationName || 'Valluvam';
 
@@ -47,11 +51,31 @@ export function SEO({ title, description, robots = 'index, follow' }) {
     // 3. Update meta robots
     setMeta('name', 'robots', robots);
 
-    // 4. Update Open Graph tags for rich previews
+    // 4. Update Open Graph tags for Facebook and WhatsApp sharing
     setMeta('property', 'og:title', fullTitle);
     setMeta('property', 'og:description', metaDesc);
     setMeta('property', 'og:type', 'website');
-  }, [title, description, robots, orgName]);
+
+    // 5. Update Open Graph URL & Image
+    const currentOrigin =
+      typeof window !== 'undefined' && window.location.origin
+        ? window.location.origin
+        : DEFAULT_ORIGIN;
+
+    const pageUrl =
+      url ||
+      (typeof window !== 'undefined' && window.location.href
+        ? window.location.href
+        : `${DEFAULT_ORIGIN}/`);
+    setMeta('property', 'og:url', pageUrl);
+
+    let pageImage = image || '/logo.jpg';
+    if (!/^https?:\/\//i.test(pageImage)) {
+      const cleanPath = pageImage.startsWith('/') ? pageImage : `/${pageImage}`;
+      pageImage = `${currentOrigin}${cleanPath}`;
+    }
+    setMeta('property', 'og:image', pageImage);
+  }, [title, description, robots, url, image, orgName]);
 
   return null;
 }
