@@ -7,36 +7,32 @@
 # ===========================================================================
 
 # ---------------------------------------------------------------------------
-# Build settings for the frontend
+# Build settings
+# ---------------------------------------------------------------------------
+# No "base" is set — all paths are relative to the repository root.
+# The build command installs server dependencies (for the Netlify Function)
+# then installs client dependencies and produces the static frontend build.
 # ---------------------------------------------------------------------------
 [build]
-  # Netlify runs the build command from the repo root
-  base = "client"
-  command = "npm install && npm run build"
+  command = "cd server && npm install --production && cd ../client && npm install && npm run build"
   publish = "client/dist"
-
-  # The backend Functions directory (relative to repo root)
-  # Netlify auto-discovers .js handlers inside this path
   functions = "server/netlify/functions"
 
 # ---------------------------------------------------------------------------
-# API rewrite — proxy /api/* to the "api" Netlify Function
+# API rewrite — proxy /api/* requests to the "api" Netlify Function
 # ---------------------------------------------------------------------------
-# The Express app inside the function already mounts routes at /api/...
-# so the rewrite passes the full path through unchanged.
+# Netlify passes the original request path in event.path, so Express
+# receives /api/health, /api/events, etc. exactly as mounted in app.js.
+# "force = true" ensures this rule wins even when _redirects exists.
 # ---------------------------------------------------------------------------
 [[redirects]]
   from = "/api/*"
-  to = "/.netlify/functions/api/api/:splat"
+  to = "/.netlify/functions/api/:splat"
   status = 200
   force = true
 
 # ---------------------------------------------------------------------------
-# SPA fallback — send all other routes to index.html for React Router
-# ---------------------------------------------------------------------------
-# This supplements the client/public/_redirects file and ensures Netlify
-# serves the SPA shell for any path not matched by a static file or the
-# API rewrite above.
+# SPA fallback — serve index.html for all other routes (React Router)
 # ---------------------------------------------------------------------------
 [[redirects]]
   from = "/*"
@@ -47,9 +43,6 @@
 # Functions configuration
 # ---------------------------------------------------------------------------
 [functions]
-  # Use the server directory as the working directory so require() paths
-  # resolve correctly relative to server/src/*
-  directory = "server/netlify/functions"
-
-  # Include the server source and node_modules in the function bundle
+  # Include the entire server directory in the function bundle so that
+  # require('../../src/app') and all transitive dependencies resolve.
   included_files = ["server/**"]
