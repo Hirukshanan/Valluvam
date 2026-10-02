@@ -9,14 +9,16 @@
 # ---------------------------------------------------------------------------
 # Build settings
 # ---------------------------------------------------------------------------
-# No "base" is set — all paths are relative to the repository root.
-# The build command installs server dependencies (for the Netlify Function)
-# then installs client dependencies and produces the static frontend build.
+# Netlify is configured to use "client" as the base directory.
+# All paths below (publish, functions) are resolved relative to "client/".
+# The build command first navigates to the server to install dependencies,
+# then returns to the client to build the frontend.
 # ---------------------------------------------------------------------------
 [build]
-  command = "cd server && npm install --production && cd ../client && npm install && npm run build"
-  publish = "client/dist"
-  functions = "server/netlify/functions"
+  base = "client"
+  command = "cd ../server && npm install --production && cd ../client && npm install && npm run build"
+  publish = "dist"
+  functions = "../server/netlify/functions"
 
 # ---------------------------------------------------------------------------
 # API rewrite — proxy /api/* requests to the "api" Netlify Function
@@ -45,4 +47,5 @@
 [functions]
   # Include the entire server directory in the function bundle so that
   # require('../../src/app') and all transitive dependencies resolve.
-  included_files = ["server/**"]
+  # This path is relative to the "client" base directory.
+  included_files = ["../server/**"]
