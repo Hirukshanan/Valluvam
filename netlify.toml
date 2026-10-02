@@ -1,0 +1,51 @@
+# ===========================================================================
+# Netlify Configuration — Valluvam Nonprofit Organization
+# ===========================================================================
+# Monorepo layout:
+#   client/   → React + Vite frontend (static site)
+#   server/   → Express.js backend API (Netlify Function)
+# ===========================================================================
+
+# ---------------------------------------------------------------------------
+# Build settings
+# ---------------------------------------------------------------------------
+# Netlify is configured to use "client" as the base directory.
+# All paths below (publish, functions) are resolved relative to "client/".
+# The build command first navigates to the server to install dependencies,
+# then returns to the client to build the frontend.
+# ---------------------------------------------------------------------------
+[build]
+  base = "client"
+  command = "cd ../server && npm install --production && cd ../client && npm install && npm run build"
+  publish = "dist"
+  functions = "../server/netlify/functions"
+
+# ---------------------------------------------------------------------------
+# API rewrite — proxy /api/* requests to the "api" Netlify Function
+# ---------------------------------------------------------------------------
+# Netlify passes the original request path in event.path, so Express
+# receives /api/health, /api/events, etc. exactly as mounted in app.js.
+# "force = true" ensures this rule wins even when _redirects exists.
+# ---------------------------------------------------------------------------
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/api/:splat"
+  status = 200
+  force = true
+
+# ---------------------------------------------------------------------------
+# SPA fallback — serve index.html for all other routes (React Router)
+# ---------------------------------------------------------------------------
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+# ---------------------------------------------------------------------------
+# Functions configuration
+# ---------------------------------------------------------------------------
+[functions]
+  # Include the entire server directory in the function bundle so that
+  # require('../../src/app') and all transitive dependencies resolve.
+  # This path is relative to the "client" base directory.
+  included_files = ["../server/**"]
