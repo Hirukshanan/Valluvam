@@ -1,0 +1,55 @@
+# ===========================================================================
+# Netlify Configuration — Valluvam Nonprofit Organization
+# ===========================================================================
+# Monorepo layout:
+#   client/   → React + Vite frontend (static site)
+#   server/   → Express.js backend API (Netlify Function)
+# ===========================================================================
+
+# ---------------------------------------------------------------------------
+# Build settings for the frontend
+# ---------------------------------------------------------------------------
+[build]
+  # Netlify runs the build command from the repo root
+  base = "client"
+  command = "npm install && npm run build"
+  publish = "client/dist"
+
+  # The backend Functions directory (relative to repo root)
+  # Netlify auto-discovers .js handlers inside this path
+  functions = "server/netlify/functions"
+
+# ---------------------------------------------------------------------------
+# API rewrite — proxy /api/* to the "api" Netlify Function
+# ---------------------------------------------------------------------------
+# The Express app inside the function already mounts routes at /api/...
+# so the rewrite passes the full path through unchanged.
+# ---------------------------------------------------------------------------
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/api/api/:splat"
+  status = 200
+  force = true
+
+# ---------------------------------------------------------------------------
+# SPA fallback — send all other routes to index.html for React Router
+# ---------------------------------------------------------------------------
+# This supplements the client/public/_redirects file and ensures Netlify
+# serves the SPA shell for any path not matched by a static file or the
+# API rewrite above.
+# ---------------------------------------------------------------------------
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+# ---------------------------------------------------------------------------
+# Functions configuration
+# ---------------------------------------------------------------------------
+[functions]
+  # Use the server directory as the working directory so require() paths
+  # resolve correctly relative to server/src/*
+  directory = "server/netlify/functions"
+
+  # Include the server source and node_modules in the function bundle
+  included_files = ["server/**"]
