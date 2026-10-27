@@ -148,3 +148,24 @@ Valluvam/
 │
 ├── .gitignore
 └── README.md
+
+```
+
+## Local Setup
+
+### Requirements
+- Node.js and npm
+- MongoDB
+- Cloudinary and Cloudflare Turnstile credentials for the related features
+
+### Backend
+1. Copy `server/.env.example` to `server/.env`.
+2. Set `MONGODB_URI` and `JWT_SECRET`. Add the Cloudinary and Turnstile values to enable those features.
+3. For your admin account, set `ADMIN_SEED_NAME`, `ADMIN_SEED_EMAIL`, and `ADMIN_SEED_PASSWORD` in `server/.env`.
+4. Run:
+
+   ```bash
+   cd server
+   npm install
+   npm run seed:admin
+   npm run dev
