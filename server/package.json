@@ -15,7 +15,7 @@
     "seed:support": "node src/scripts/seedSupport.js"
   },
   "keywords": [],
-  "license": "ISC",
+  "license": "MIT",
   "type": "commonjs",
   "dependencies": {
     "bcryptjs": "^3.0.3",
