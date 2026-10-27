@@ -154,18 +154,67 @@ Valluvam/
 ## Local Setup
 
 ### Requirements
-- Node.js and npm
-- MongoDB
-- Cloudinary and Cloudflare Turnstile credentials for the related features
+
+- Node.js 22.12 or later and npm
+- Git
+- A local MongoDB instance or MongoDB Atlas connection
+- Cloudinary credentials for image uploads
+- Cloudflare Turnstile site and secret keys for protected public forms
+
+### Clone the Repository
+
+```bash
+git clone https://github.com/Hirukshanan/Valluvam.git
+cd Valluvam
+```
 
 ### Backend
-1. Copy `server/.env.example` to `server/.env`.
-2. Set `MONGODB_URI` and `JWT_SECRET`. Add the Cloudinary and Turnstile values to enable those features.
-3. For your admin account, set `ADMIN_SEED_NAME`, `ADMIN_SEED_EMAIL`, and `ADMIN_SEED_PASSWORD` in `server/.env`.
-4. Run:
 
-   ```bash
-   cd server
-   npm install
-   npm run seed:admin
-   npm run dev
+1. Copy `server/.env.example` to `server/.env`.
+2. Configure the following values:
+   - `MONGODB_URI`: your MongoDB connection string
+   - `JWT_SECRET`: a strong secret for authentication
+   - `PORT=5000`
+   - `CLIENT_URL=http://localhost:5173`
+   - `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, and `CLOUDINARY_API_SECRET`
+   - `TURNSTILE_SECRET_KEY`: your Turnstile secret key
+3. Add `ADMIN_SEED_NAME`, `ADMIN_SEED_EMAIL`, and a strong
+   `ADMIN_SEED_PASSWORD` to `server/.env`.
+4. Ensure MongoDB is running or your Atlas database is accessible.
+5. From the repository root, run:
+
+```bash
+cd server
+npm install
+npm run seed:admin
+npm run dev
+```
+
+The backend runs at `http://localhost:5000`.
+
+The seed command creates the initial admin account. If the email already
+exists, it does not update the existing account or its password.
+
+### Frontend
+
+1. Open a second terminal at the repository root.
+2. Copy `client/.env.example` to `client/.env`.
+3. Set `VITE_API_URL=http://localhost:5000/api`.
+4. Set `VITE_TURNSTILE_SITE_KEY` to the site key matching your backend
+   secret key. Configure Turnstile to allow your local development hostname.
+5. Run:
+
+```bash
+cd client
+npm install
+npm run dev
+```
+
+Keep both the frontend and backend running.
+
+- Website: `http://localhost:5173`
+- Admin login: `http://localhost:5173/admin/login`
+
+Log in using the admin credentials configured before running the seed command.
+If Vite selects another port, use the address printed in its terminal.
+
